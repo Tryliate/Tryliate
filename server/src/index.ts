@@ -9,7 +9,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { db, pool } from './db/index';
-import { nodes, edges, mcpRegistry, flowSpace, mcpAuthorizations, neuralDiscoveryQueue, foundryNodes, agentMemory, workspaceHistory } from './db/schema';
+import { nodes, edges, users, mcpRegistry, flowSpace, mcpAuthorizations, neuralDiscoveryQueue, foundryNodes, agentMemory, workspaceHistory } from './db/schema';
 import { NeuralAI } from './ai';
 import { GuardianEnforcer, NeuralScope } from './guardian';
 import { trackExecution, redis } from './redis.ts';
@@ -653,14 +653,27 @@ app.post('/api/infrastructure/provision', async (req: Request, res: Response, ne
     });
 
     if (!accessToken) {
-      console.log(`[PROVISION] Token missing for ${userId}. Fetching from Vault...`);
-      const { data: vaultData } = await supabase.from('users').select('supabase_access_token').eq('id', userId).single();
+      console.log(`[PROVISION] Token missing in request for ${userId}. Probing Vaults...`);
+
+      // Probe Supabase Vault
+      const { data: vaultData, error: vaultErr } = await supabase.from('users').select('supabase_access_token').eq('id', userId).single();
+      if (vaultErr) console.log(`[PROVISION] Supabase Vault Probe returned error: ${vaultErr.message}`);
       accessToken = vaultData?.supabase_access_token;
+
+      // Fallback: Probe Neon Vault (Source of truth for Drizzle)
+      if (!accessToken) {
+        console.log(`[PROVISION] Supabase Vault empty. Probing Neon Vault for ${userId}...`);
+        const { data: neonData } = await (db.select().from(users).where(eq(users.id, userId)).limit(1) as any);
+        accessToken = (neonData?.[0] as any)?.supabaseAccessToken;
+      }
     }
 
     if (!accessToken) {
-      throw new Error('Supabase Authorization is missing or expired. Please re-connect.');
+      console.error(`[PROVISION] CRITICAL: No access token found in any vault for user ${userId}`);
+      throw new Error('Supabase Authorization is missing. Please disconnect and re-connect Supabase from the Integrations menu.');
     }
+
+    console.log(`[PROVISION] Authorization Secured. Proceeding with provisioning for ${userId}.`);
 
     // Set up response
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
@@ -922,12 +935,31 @@ app.post('/api/infrastructure/provision-engine', async (req: Request, res: Respo
   try {
     const { userId } = SyncDatabaseSchema.parse(req.body);
     let { accessToken } = req.body;
+
+    console.log(`[ENGINE-PROVISION] Starting for user ${userId}...`);
+
     const supabase = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY);
-    const { data: user, error: userError } = await supabase.from('users').select('*').eq('id', userId).single();
-    if (userError || !user) throw new Error('User not found.');
+
+    // Fetch user from Supabase with fallback to Neon
+    let user: any = null;
+    const { data: sbUser } = await supabase.from('users').select('*').eq('id', userId).single();
+    user = sbUser;
+
+    if (!user) {
+      console.log(`[ENGINE-PROVISION] User not in Supabase vault. Checking Neon for ${userId}...`);
+      const { data: neonUsers } = await (db.select().from(users).where(eq(users.id, userId)).limit(1) as any);
+      user = neonUsers?.[0];
+      if (user) {
+        // Map Drizzle camelCase to snake_case for the rest of the flow
+        user.supabase_access_token = user.supabaseAccessToken;
+        user.supabase_project_id = user.supabaseProjectId;
+      }
+    }
+
+    if (!user) throw new Error('User profile not found in Neural Vault.');
 
     if (!accessToken) accessToken = user.supabase_access_token;
-    if (!accessToken) throw new Error('Supabase project not connected or authorization expired.');
+    if (!accessToken) throw new Error('Neural calibration incomplete: Supabase authorization missing.');
 
     sendStep('⚡ Establishing MCP Bridge Connection...');
     const mcpSessionId = await initializeSupabaseMCP(user.supabase_project_id, user.supabase_access_token);

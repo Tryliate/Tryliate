@@ -93,20 +93,20 @@ export async function GET(request: Request) {
         try {
           const tryliateSupabase = createClient(supabaseUrl, serviceRoleKey);
 
-          console.log('🔄 Syncing Supabase keys to user profile (Service Role)...');
+          console.log(`🔄 Upserting Supabase keys for user ${userId}...`);
 
-          const { error: updateError } = await tryliateSupabase.from('users').update({
+          const { error: updateError } = await tryliateSupabase.from('users').upsert({
+            id: userId,
             supabase_connected: true,
             supabase_access_token: accessToken,
             supabase_refresh_token: tokenData.refresh_token || null,
             updated_at: new Date().toISOString()
-          }).eq('id', userId);
+          }, { onConflict: 'id' });
 
           if (updateError) {
-            console.error('❌ Failed to update user profile with Supabase keys:', updateError);
-            // We don't block the redirect, but we log the error.
+            console.error('❌ Failed to upsert user profile:', updateError);
           } else {
-            console.log('✅ User profile updated with Supabase connection status.');
+            console.log('✅ User record synchronized in vault.');
           }
         } catch (err) {
           console.error('❌ Unexpected error during Supabase sync:', err);
