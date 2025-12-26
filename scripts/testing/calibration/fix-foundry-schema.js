@@ -4,7 +4,7 @@ const { Client } = pkg;
 
 // This is the URL from the secret, let's hope it's correct enough to connect
 // I'll try to reconstruct it if it has typos
-const connectionString = 'postgresql://neondb_owner:npg_U2Mxk5pPeyrg@ep-silent-wave-a5vjpsv9-pooler.us-east-2.aws.neon.tech/neondb?channel_binding=require&sslmode=require';
+const connectionString = process.env.NEON_DATABASE_URL || 'postgresql://neondb_owner:REDACTED@ep-silent-wave-a5vjpsv9-pooler.us-east-2.aws.neon.tech/neondb?channel_binding=require&sslmode=require';
 
 async function fixSchema() {
   const client = new Client({ connectionString });

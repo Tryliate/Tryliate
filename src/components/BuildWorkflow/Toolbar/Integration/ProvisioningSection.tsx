@@ -1,5 +1,6 @@
 import React from 'react';
 import { Database, RefreshCw, Box, MousePointer2, Search, Check, Zap, Minus } from 'lucide-react';
+import { TryliateTerminal } from './TryliateTerminal';
 import { AIPanelMini } from './AIPanelMini';
 
 interface ProvisioningSectionProps {
@@ -26,7 +27,7 @@ export const ProvisioningSection: React.FC<ProvisioningSectionProps> = ({
               <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#fff', boxShadow: '0 0 8px rgba(255,255,255,0.8)' }} />
               MCP ACTIVE
             </span>
-            <span style={{ fontSize: '8px', color: '#555', fontFamily: 'monospace' }}>BRIDGE READY</span>
+            <span style={{ fontSize: '8px', color: '#555', fontFamily: 'monospace' }}>MCP LINKED</span>
           </div>
           <button
             onClick={(e) => {
@@ -109,84 +110,11 @@ export const ProvisioningSection: React.FC<ProvisioningSectionProps> = ({
           )}
 
           {(isProvisioning || provisioningLogs.length > 0) && (
-            <div className="custom-scroll"
-              ref={(el) => { if (el) el.scrollTop = el.scrollHeight; }}
-              style={{
-                marginTop: isProvisioning ? '0px' : '8px',
-                background: 'rgba(0, 0, 0, 0.4)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255,255,255,0.05)',
-                borderRadius: '16px',
-                padding: '12px',
-                height: '140px',
-                overflowY: 'auto',
-                fontSize: '9px',
-                fontFamily: '"SF Mono", "Fira Code", monospace',
-                color: '#888',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '6px',
-                scrollbarWidth: 'none',
-                msOverflowStyle: 'none'
-              }}>
-              <style>{`.custom-scroll::-webkit-scrollbar { display: none; }`}</style>
-              <div style={{
-                color: '#fff',
-                fontSize: '8px',
-                marginBottom: '6px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.15em',
-                display: 'flex',
-                justifyContent: 'space-between',
-                paddingBottom: '6px',
-                borderBottom: '1px solid rgba(255,255,255,0.05)',
-                alignItems: 'center',
-                fontWeight: 900
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Zap size={10} className={isProvisioning ? "spin-fast" : ""} color="#fff" />
-                  <span>{isProvisioning ? 'NEURAL BRIDGE INITIALIZING' : 'INTELLIGENCE STREAM'}</span>
-                </div>
-                <span style={{ opacity: 0.3 }}>v1.1.1</span>
-              </div>
-              {provisioningLogs.map((log, i) => {
-                const isError = log.includes('Error') || log.includes('Failed');
-                const isSuccess = log.includes('Success') || log.includes('Complete') || log.includes('Ready');
-
-                return (
-                  <div key={i} style={{
-                    wordBreak: 'break-word',
-                    lineHeight: '1.4',
-                    opacity: 0.8,
-                    display: 'flex',
-                    gap: '4px',
-                    alignItems: 'flex-start'
-                  }}>
-                    <span style={{
-                      color: isError ? '#ff4444' : (isSuccess ? '#fff' : '#888'),
-                      fontWeight: (isSuccess || isError) ? 900 : 500
-                    }}>
-                      {log.replace(/🚀|🤖|✅|🔐|⚠️|✨|🛡️|💾|💉|🟢|🎉|❌|ℹ️|🔑|🏗️/g, '').trim()}
-                    </span>
-                  </div>
-                );
-              })}
-              {isProvisioning && (
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  color: '#fff',
-                  fontSize: '8px',
-                  fontWeight: 900,
-                  marginTop: '4px',
-                  opacity: 0.5
-                }}>
-                  <RefreshCw size={8} className="spin" />
-                  ANALYZING ARCHITECTURE...
-                </div>
-              )}
-            </div>
+            <TryliateTerminal
+              logs={provisioningLogs}
+              isProcessing={isProvisioning}
+              version="v1.1.5"
+            />
           )}
         </div>
       )}
@@ -195,7 +123,6 @@ export const ProvisioningSection: React.FC<ProvisioningSectionProps> = ({
         .spin { animation: spin 2s linear infinite; }
         @keyframes spin-fast { 100% { transform: rotate(360deg); } }
         .spin-fast { animation: spin-fast 0.8s linear infinite; }
-        @keyframes blink { 50% { opacity: 0; } }
       `}</style>
     </div>
   );

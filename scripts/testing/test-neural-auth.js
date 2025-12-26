@@ -3,7 +3,7 @@ import pkg from 'pg';
 const { Client } = pkg;
 import fetch from 'node-fetch';
 
-const connectionString = 'postgresql://neondb_owner:npg_U2Mxk5pPeyrg@ep-sweet-dawn-a4cj3s5d-pooler.us-east-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require';
+const connectionString = process.env.NEON_DATABASE_URL || 'postgresql://neondb_owner:REDACTED@ep-sweet-dawn-a4cj3s5d-pooler.us-east-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require';
 const USER_ID = '263b8f7b-8098-421f-aa4f-b813dbb46287';
 const PROVIDER = 'github-neural';
 

@@ -2,9 +2,9 @@
 import pkg from 'pg';
 const { Client } = pkg;
 
-const connectionString = 'postgresql://neondb_owner:npg_U2Mxk5pPeyrg@ep-sweet-dawn-a4cj3s5d-pooler.us-east-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require';
-const PUBLISHABLE_KEY = 'sb_publishable_gLjIL2U66iJo18ce3HHHDg_twGAg078';
-const SECRET_KEY = 'sb_secret_5aDb6y-u9k__Ogf2O6jyWA_5U52r9AW';
+const connectionString = process.env.NEON_DATABASE_URL || 'postgresql://neondb_owner:REDACTED@ep-sweet-dawn-a4cj3s5d-pooler.us-east-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require';
+const PUBLISHABLE_KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_REDACTED';
+const SECRET_KEY = process.env.SUPABASE_SECRET_KEY || 'sb_secret_REDACTED';
 const USER_ID = '263b8f7b-8098-421f-aa4f-b813dbb46287';
 
 async function injectNeon() {

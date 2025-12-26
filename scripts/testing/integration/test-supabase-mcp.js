@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const PROJECT_ID = process.env.TEST_PROJECT_ID || 'uhcxwfpaxwofxxnupjsv';
+const PROJECT_ID = process.env.TEST_PROJECT_ID || 'uhcxwfpaxwof_REDACTED';
 const ACCESS_TOKEN = process.argv[2] || process.env.TEST_ACCESS_TOKEN;
 
 async function testSupabaseMCP() {

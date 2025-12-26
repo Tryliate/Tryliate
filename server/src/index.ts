@@ -744,7 +744,7 @@ app.post('/api/infrastructure/provision', async (req: Request, res: Response, ne
 
     if (!accessToken) {
       console.error(`[PROVISION] CRITICAL: No access token found in any vault for user ${userId}`);
-      throw new Error('Supabase Authorization is missing. Please disconnect and re-connect Supabase from the Integrations menu.');
+      throw new Error('Supabase Management Token missing. Please "Disconnect" and then "Connect" Supabase Auth above to refresh your session.');
     }
 
     console.log(`[PROVISION] Authorization Secured. Proceeding with provisioning for ${userId}.`);
@@ -901,7 +901,7 @@ app.post('/api/infrastructure/provision', async (req: Request, res: Response, ne
     // ---------------------------------------------------------
     // STAGE 1: IMMEDIATE CREDENTIALS SAVE
     // ---------------------------------------------------------
-    sendStep('🛡️ Securing architectural keys in vault...');
+    sendStep('🛡️ Securing Supabase MCP credentials in vault...');
 
     if (!secretKey) throw new Error('Cannot proceed: Secret Key is missing.');
     if (!dbPass) throw new Error('Cannot proceed: Database Password is missing.');
@@ -939,7 +939,7 @@ app.post('/api/infrastructure/provision', async (req: Request, res: Response, ne
     if (secretKey) {
       try {
         // Strategy: Official Supabase MCP (execute_sql with valid Handshake)
-        sendStep(`💉 Neural Schema: Establishing Session with Supabase MCP...`);
+        sendStep(`💉 Calibrating 17-Table Supabase MCP Architecture...`);
         // Use the Secret Key (service_role) for MCP Bridge
         const mcpSessionId = await initializeSupabaseMCP(targetProject.id, secretKey);
 
@@ -956,7 +956,7 @@ app.post('/api/infrastructure/provision', async (req: Request, res: Response, ne
             if (stmt.toLowerCase().includes('create table')) {
               // Extract table name from public.xxx or tryliate.xxx
               const tableName = stmt.match(/(?:public|tryliate)\.([\w_]+)/)?.[1] || 'infrastructure';
-              sendStep(`✅ Calibrated: ${tableName.toUpperCase()}`);
+              sendStep(`✅ Calibrated (Supabase MCP): ${tableName.toUpperCase()}`);
             }
           } catch (stmtErr: any) {
             console.warn(`⚠️ Statement failed: ${stmtErr.message}`);
@@ -964,7 +964,7 @@ app.post('/api/infrastructure/provision', async (req: Request, res: Response, ne
         }
 
         if (successCount === 0) throw new Error('Zero statements executed successfully via MCP Bridge.');
-        sendStep(`✅ Neural Schema calibrated successfully (${successCount} kernels active).`);
+        sendStep(`✅ 17-Table Supabase MCP calibrated successfully.`);
       } catch (schemaErr: any) {
         console.error('MCP CALIBRATION ERROR:', schemaErr.message);
         sendStep(`❌ Calibration Failed: ${schemaErr.message}.`, 'error');

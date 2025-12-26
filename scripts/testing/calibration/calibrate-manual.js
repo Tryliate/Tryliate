@@ -6,8 +6,8 @@ import fetch from 'node-fetch';
  * Forces 17-table Neural Architecture with COMPLETE RLS & Realtime coverage.
  */
 
-const PROJECT_ID = 'pwadtgqevdemsoqhqmqm';
-const ACCESS_TOKEN = 'sbp_3a31701abf274f90bddabca8eaaca7b4a9841ae1';
+const PROJECT_ID = process.env.SUPABASE_PROJECT_ID || 'pwadtgqevdemsoqhqmqm';
+const ACCESS_TOKEN = process.env.SUPABASE_ACCESS_TOKEN || 'sbp_REDACTED';
 
 const TABLES = [
   'public.workflows',
