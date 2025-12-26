@@ -168,36 +168,69 @@ app.get('/health', async (req: Request, res: Response) => {
 app.get('/api/debug/schema-repair', async (req: Request, res: Response) => {
   try {
     console.log('🛠️ DEBUG: Repairing Schema...');
+    let message = '';
 
-    // 1. Check if foundry_nodes exists and has 'data' column
+    // 1. Repair foundry_nodes
     const resNodes = await pool.query(`
-      SELECT column_name 
-      FROM information_schema.columns 
-      WHERE table_name = 'foundry_nodes'
+      SELECT column_name FROM information_schema.columns WHERE table_name = 'foundry_nodes'
     `);
-
-    const columns = resNodes.rows.map((r: any) => r.column_name);
-    let message = `Current columns: ${columns.join(', ')}. `;
-
-    if (columns.length > 0) {
-      if (!columns.includes('data')) {
-        if (columns.includes('meta')) {
+    const nodeColumns = resNodes.rows.map((r: any) => r.column_name);
+    if (nodeColumns.length > 0) {
+      if (!nodeColumns.includes('data')) {
+        if (nodeColumns.includes('meta')) {
           await pool.query('ALTER TABLE foundry_nodes RENAME COLUMN meta TO data');
-          message += 'Renamed meta to data. ';
+          message += 'Foundry: Renamed meta to data. ';
         } else {
           await pool.query('ALTER TABLE foundry_nodes ADD COLUMN data JSONB NOT NULL DEFAULT \'{}\'');
-          message += 'Added missing data column. ';
+          message += 'Foundry: Added missing data column. ';
         }
-      } else {
-        message += 'Data column already exists. ';
       }
     } else {
-      // Table doesn't exist, run full init
-      await pool.query(BYOI_SCHEMA_SQL);
-      message += 'Table didn\'t exist, ran full BYOI_SCHEMA_SQL. ';
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS public.foundry_nodes (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          label TEXT NOT NULL,
+          type TEXT NOT NULL,
+          category TEXT NOT NULL,
+          sub_category TEXT,
+          data JSONB NOT NULL,
+          created_at TIMESTAMPTZ DEFAULT now()
+        );
+      `);
+      message += 'Foundry: Created table foundry_nodes. ';
     }
 
-    res.json({ success: true, message });
+    // 2. Repair users (Master Vault)
+    const resUsers = await pool.query(`
+      SELECT column_name FROM information_schema.columns WHERE table_name = 'users'
+    `);
+    const userColumns = resUsers.rows.map((r: any) => r.column_name);
+    if (userColumns.length === 0) {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS public.users (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          email TEXT UNIQUE,
+          supabase_project_id TEXT,
+          supabase_access_token TEXT,
+          supabase_db_pass TEXT,
+          tryliate_initialized BOOLEAN DEFAULT false,
+          supabase_connected BOOLEAN DEFAULT false,
+          created_at TIMESTAMPTZ DEFAULT now()
+        );
+      `);
+      message += 'Users: Created platform users table. ';
+    } else {
+      // Ensure specific columns exist
+      const required = ['supabase_project_id', 'supabase_access_token', 'supabase_db_pass', 'supabase_connected'];
+      for (const col of required) {
+        if (!userColumns.includes(col)) {
+          await pool.query(`ALTER TABLE public.users ADD COLUMN IF NOT EXISTS ${col} TEXT`);
+          message += `Users: Added ${col}. `;
+        }
+      }
+    }
+
+    res.json({ success: true, message: message || 'Schema is healthy.' });
   } catch (err: any) {
     console.error('❌ Schema Repair Failed:', err);
     res.status(500).json({ error: err.message });
@@ -662,9 +695,13 @@ app.post('/api/infrastructure/provision', async (req: Request, res: Response, ne
 
       // Fallback: Probe Neon Vault (Source of truth for Drizzle)
       if (!accessToken) {
-        console.log(`[PROVISION] Supabase Vault empty. Probing Neon Vault for ${userId}...`);
-        const neonData = await db.select().from(users).where(eq(users.id, userId)).limit(1);
-        accessToken = (neonData?.[0] as any)?.supabaseAccessToken;
+        try {
+          console.log(`[PROVISION] Supabase Vault empty. Probing Neon Vault for ${userId}...`);
+          const neonData = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+          accessToken = (neonData?.[0] as any)?.supabaseAccessToken;
+        } catch (neonErr: any) {
+          console.warn(`[PROVISION] Neon Vault Probe failed: ${neonErr.message}. This is likely due to missing columns/table in the master database.`);
+        }
       }
     }
 
@@ -947,13 +984,17 @@ app.post('/api/infrastructure/provision-engine', async (req: Request, res: Respo
     targetUser = sbUser;
 
     if (!targetUser) {
-      console.log(`[ENGINE-PROVISION] User not in Supabase vault. Checking Neon for ${userId}...`);
-      const neonUsers = await db.select().from(users).where(eq(users.id, userId)).limit(1);
-      targetUser = neonUsers?.[0];
-      if (targetUser) {
-        // Map Drizzle camelCase to snake_case for the rest of the flow
-        targetUser.supabase_access_token = targetUser.supabaseAccessToken;
-        targetUser.supabase_project_id = targetUser.supabaseProjectId;
+      try {
+        console.log(`[ENGINE-PROVISION] User not in Supabase vault. Checking Neon for ${userId}...`);
+        const neonUsers = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+        targetUser = neonUsers?.[0];
+        if (targetUser) {
+          // Map Drizzle camelCase to snake_case for the rest of the flow
+          targetUser.supabase_access_token = targetUser.supabaseAccessToken;
+          targetUser.supabase_project_id = targetUser.supabaseProjectId;
+        }
+      } catch (neonErr: any) {
+        console.warn(`[ENGINE-PROVISION] Neon fallback failed: ${neonErr.message}. This is likely due to missing columns in the master database.`);
       }
     }
 
