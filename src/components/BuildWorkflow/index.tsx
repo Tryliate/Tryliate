@@ -54,6 +54,7 @@ const BuildWorkflowInner = () => {
   const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'info', message: string } | null>(null);
   const [executionLogs, setExecutionLogs] = useState<string[]>([]);
   const [isExecuting, setIsExecuting] = useState(false);
+  const [isSmartConnectOpen, setIsSmartConnectOpen] = useState(false);
 
   // Dropdown states for Toolbar
   const [isNodeDropupOpen, setIsNodeDropupOpen] = useState(false);
@@ -77,7 +78,7 @@ const BuildWorkflowInner = () => {
   const [provisioningLogs, setProvisioningLogs] = useState<string[]>([]);
 
   const { handleAuthorize, handleProvisionInfrastructure, handleInfrastructureReset } = useInfrastructure(
-    user, setIsProvisioning, setProvisioningLogs, setNotification, setIsConfigured, (v: boolean) => { }
+    user, setIsProvisioning, setProvisioningLogs, setNotification, setIsConfigured, setIsSmartConnectOpen
   );
 
   const {
@@ -130,7 +131,7 @@ const BuildWorkflowInner = () => {
     return () => window.removeEventListener('message', handleMessage);
   }, [setRetryTrigger]);
 
-  const isBlurringOverlayOpen = !!activeOverlay || isMasterHandshakeOpen || !!activeEdgeId;
+  const isBlurringOverlayOpen = !!activeOverlay || isMasterHandshakeOpen || isSmartConnectOpen || !!activeEdgeId;
 
   return (
     <div style={{ width: '100%', height: '100%', background: 'transparent', overflow: 'hidden', position: 'relative' }}>
@@ -152,7 +153,13 @@ const BuildWorkflowInner = () => {
           setIsIntegrationDropupOpen={setIsIntegrationDropupOpen}
           isSupabaseConnected={isSupabaseConnected}
           supabaseOrgId={null}
-          onToggleConnection={() => { }}
+          onToggleConnection={() => {
+            if (isSupabaseConnected) {
+              handleInfrastructureReset();
+            } else {
+              setIsSmartConnectOpen(true);
+            }
+          }}
           onOpenOverlay={(cat, sub) => setActiveOverlay({ category: cat, subType: sub })}
           onRunTest={() => {
             setRunStatus('running');
@@ -232,9 +239,12 @@ const BuildWorkflowInner = () => {
       </div>
 
       <SmartConnectOverlay
-        isOpen={false}
-        onClose={() => { }}
-        onAuthorize={handleAuthorize}
+        isOpen={isSmartConnectOpen}
+        onClose={() => setIsSmartConnectOpen(false)}
+        onAuthorize={() => {
+          setIsSmartConnectOpen(false);
+          handleAuthorize();
+        }}
       />
 
       <MasterHandshakeOverlay
