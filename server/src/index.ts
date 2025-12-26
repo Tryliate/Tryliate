@@ -1325,11 +1325,23 @@ app.get('/api/mcp/official-refs', async (req: Request, res: Response) => {
 
 app.get('/api/mcp/foundry-nodes', async (req: Request, res: Response) => {
   try {
+    // Debug connection availability
+    const hasDbUrl = !!(process.env.DATABASE_URL || process.env.NEON_DB_URL || process.env.NEON_DATABASE_URL);
+    if (!hasDbUrl) {
+      throw new Error('NEON_DATABASE_URL is missing from environment variables.');
+    }
+
     const result = await db.select().from(foundryNodes);
+    console.log(`Foundry nodes fetched: ${result.length}`);
     res.json(result);
   } catch (err: any) {
     console.error('Foundry Nodes Fetch Error:', err);
-    res.status(500).json({ error: 'Failed to fetch foundry nodes' });
+    res.status(500).json({
+      error: 'Failed to fetch foundry nodes',
+      details: err.message,
+      // Only show stack in non-production or for debugging
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
   }
 });
 
