@@ -1,0 +1,100 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: frontend
+  labels:
+    cloud.googleapis.com/location: us-central1
+  annotations:
+    run.googleapis.com/ingress: all
+    run.googleapis.com/ingress-status: all
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/startup-cpu-boost: "true"
+        autoscaling.knative.dev/maxScale: "12"
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 300
+      serviceAccountName: 374665986758-compute@developer.gserviceaccount.com
+      containers:
+        - image: us-central1-docker.pkg.dev/tryliate-production-v1/cloud-run-source-deploy/frontend
+          ports:
+            - containerPort: 8080
+              name: http1
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 512Mi
+          env:
+            - name: NEXT_PUBLIC_SITE_URL
+              value: https://frontend-nh767yfnoq-uc.a.run.app
+            - name: NEXT_PUBLIC_SUPABASE_URL
+              value: https://edtfhsblomgamobizkbo.supabase.co
+            - name: NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+              value: sb_publishable_gLjIL2U66iJo18ce3HHHDg_twGAg078
+            - name: NEXT_PUBLIC_CLOUD_RUN_URL
+              value: https://tryliate-backend-374665986758.us-east1.run.app
+            - name: NEXT_PUBLIC_ENGINE_URL
+              value: https://tryliate-backend-374665986758.us-east1.run.app
+            - name: NEXT_PUBLIC_LOGO_DEV_PUBLISHABLE_KEY
+              value: pk_KEBuu6OhQjqHQIlO1PHMMQ
+            - name: NEXT_PUBLIC_SUPABASE_OAUTH_CLIENT_ID
+              value: a9d07a52-e377-4656-8149-802194c03bdb
+            - name: SUPABASE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: supabase-service-role-key
+                  key: latest
+            - name: SUPABASE_OAUTH_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: supabase-oauth-client-secret
+                  key: latest
+            - name: LOGO_DEV_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: logo-dev-secret-key
+                  key: latest
+            - name: GROQ_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: groq-api-key
+                  key: latest
+            - name: GOOGLE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: google-client-id
+                  key: latest
+            - name: GOOGLE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: google-client-secret
+                  key: latest
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: redis-url
+                  key: latest
+            - name: UPSTASH_REDIS_REST_URL
+              valueFrom:
+                secretKeyRef:
+                  name: upstash-redis-rest-url
+                  key: latest
+            - name: UPSTASH_REDIS_REST_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: upstash-redis-rest-token
+                  key: latest
+            - name: NEON_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: neon-database-url
+                  key: latest
+          startupProbe:
+            initialDelaySeconds: 5
+            timeoutSeconds: 3
+            periodSeconds: 10
+            failureThreshold: 10
+            tcpSocket:
+              port: 8080

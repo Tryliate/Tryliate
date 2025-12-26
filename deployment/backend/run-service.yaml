@@ -1,0 +1,68 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: tryliate-backend
+  labels:
+    cloud.googleapis.com/location: us-east1
+  annotations:
+    run.googleapis.com/ingress: all
+    run.googleapis.com/ingress-status: all
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/startup-cpu-boost: "true"
+        autoscaling.knative.dev/maxScale: "12"
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 300
+      serviceAccountName: 374665986758-compute@developer.gserviceaccount.com
+      containers:
+        - image: us-east1-docker.pkg.dev/tryliate-production-v1/cloud-run-source-deploy/tryliate-backend
+          ports:
+            - containerPort: 8080
+              name: http1
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 512Mi
+          env:
+            - name: NEXT_PUBLIC_SUPABASE_URL
+              value: https://edtfhsblomgamobizkbo.supabase.co
+            - name: SUPABASE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: supabase-service-role-key
+                  key: latest
+            - name: GROQ_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: groq-api-key
+                  key: latest
+            - name: NEON_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: neon-database-url
+                  key: latest
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: redis-url
+                  key: latest
+            - name: UPSTASH_REDIS_REST_URL
+              valueFrom:
+                secretKeyRef:
+                  name: upstash-redis-rest-url
+                  key: latest
+            - name: UPSTASH_REDIS_REST_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: upstash-redis-rest-token
+                  key: latest
+          startupProbe:
+            initialDelaySeconds: 5
+            timeoutSeconds: 3
+            periodSeconds: 10
+            failureThreshold: 10
+            tcpSocket:
+              port: 8080

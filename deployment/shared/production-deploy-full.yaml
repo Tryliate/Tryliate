@@ -1,0 +1,104 @@
+steps:
+  # ==========================================
+  # 1. BUILD & PUSH FRONTEND
+  # ==========================================
+  - name: "gcr.io/cloud-builders/docker"
+    id: "build-frontend"
+    args:
+      - "build"
+      - "-f"
+      - "docker/frontend.Dockerfile"
+      # Build Args for Public/Client-Side Config
+      - "--build-arg"
+      - "NEXT_PUBLIC_SITE_URL=https://frontend-nh767yfnoq-uc.a.run.app"
+      - "--build-arg"
+      - "NEXT_PUBLIC_SUPABASE_URL=https://edtfhsblomgamobizkbo.supabase.co"
+      - "--build-arg"
+      - "NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_gLjIL2U66iJo18ce3HHHDg_twGAg078"
+      - "--build-arg"
+      - "NEXT_PUBLIC_CLOUD_RUN_URL=https://tryliate-backend-374665986758.us-east1.run.app"
+      - "--build-arg"
+      - "NEXT_PUBLIC_ENGINE_URL=https://tryliate-backend-374665986758.us-east1.run.app"
+      - "--build-arg"
+      - "NEXT_PUBLIC_LOGO_DEV_PUBLISHABLE_KEY=pk_KEBuu6OhQjqHQIlO1PHMMQ"
+      - "--build-arg"
+      - "NEXT_PUBLIC_SUPABASE_OAUTH_CLIENT_ID=a9d07a52-e377-4656-8149-802194c03bdb"
+      - "-t"
+      - "us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/frontend:$_VERSION"
+      - "-t"
+      - "us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/frontend:latest"
+      - "."
+
+  - name: "gcr.io/cloud-builders/docker"
+    id: "push-frontend"
+    args:
+      - "push"
+      - "us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/frontend:$_VERSION"
+
+  # ==========================================
+  # 2. BUILD & PUSH BACKEND
+  # ==========================================
+  - name: "gcr.io/cloud-builders/docker"
+    id: "build-backend"
+    args:
+      [
+        "build",
+        "-f",
+        "docker/backend.Dockerfile",
+        "-t",
+        "us-east1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/tryliate-backend:$_VERSION",
+        "-t",
+        "us-east1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/tryliate-backend:latest",
+        "server",
+      ]
+      # Note: Content context is 'server' directory, but Dockerfile is in root/docker.
+      # Actually, the previous yaml had context "." but Dockerfile "server" ???
+      # Let's check previous yaml again.
+      # Previous yaml args: "server" as the last arg.
+      # Dockerfile assumes COPY package.json ./ (relative to context)
+      # If context is server, package.json is at root of server. That matches.
+      # But the Dockerfile path is passed as -f docker/backend.Dockerfile.
+      # If we run from root, and pass context "server", then "docker/backend.Dockerfile" needs to be accessible?
+      # Actually, usually -f is relative to where you run the command (workspace root), context is the last arg.
+      # If Dockerfile is outside of context, we might need to be careful.
+      # But previous build log seemed to find it.
+      # Let's look at previous yaml in Step 4316:
+      # args: ["build", "-f", "docker/backend.Dockerfile", ..., "server"]
+      # This worked for the build step. So I will keep it.
+
+  - name: "gcr.io/cloud-builders/docker"
+    id: "push-backend"
+    args:
+      - "push"
+      - "us-east1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/tryliate-backend:$_VERSION"
+
+  # ==========================================
+  # 3. DEPLOY FRONTEND
+  # ==========================================
+  - name: "gcr.io/cloud-builders/gcloud"
+    id: "deploy-frontend"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        sed -i "s|image: .*|image: us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/frontend:$_VERSION|g" deployment/frontend/run-service.yaml
+        gcloud run services replace deployment/frontend/run-service.yaml --region us-central1
+
+  # ==========================================
+  # 4. DEPLOY BACKEND
+  # ==========================================
+  - name: "gcr.io/cloud-builders/gcloud"
+    id: "deploy-backend"
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        sed -i "s|image: .*|image: us-east1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/tryliate-backend:$_VERSION|g" deployment/backend/run-service.yaml
+        gcloud run services replace deployment/backend/run-service.yaml --region us-east1
+
+images:
+  - "us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/frontend:$_VERSION"
+  - "us-east1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/tryliate-backend:$_VERSION"
+
+options:
+  logging: CLOUD_LOGGING_ONLY

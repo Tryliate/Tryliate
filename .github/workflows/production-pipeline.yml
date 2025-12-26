@@ -1,0 +1,75 @@
+name: Tryliate Production Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 25
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Type check
+        run: bun run type-check
+
+      - name: Production Build Check
+        run: bun run build
+
+      - name: Run Unit & Integration Tests
+        run: bun run test
+
+      - name: Production Smoke Test
+        run: bun run smoke-test
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ fromJson(toJson(secrets)).NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ fromJson(toJson(secrets)).NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+
+  deploy:
+    name: Deploy to Google Cloud
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: "read"
+      id-token: "write"
+    env:
+      GCP_PROJECT_ID: "tryliate-production-v1"
+    steps:
+      - name: "Checkout Repository"
+        uses: "actions/checkout@v4"
+
+      - name: "Google Auth"
+        uses: "google-github-actions/auth@v2"
+        with:
+          credentials_json: ${{ fromJson(toJson(secrets)).GCP_SA_KEY }}
+          project_id: "${{ env.GCP_PROJECT_ID }}"
+
+      - name: "Set up Cloud SDK"
+        uses: "google-github-actions/setup-gcloud@v2"
+        with:
+          project_id: "${{ env.GCP_PROJECT_ID }}"
+
+      - name: "Submit Cloud Build"
+        run: |
+          gcloud builds submit \
+            --config deployment/shared/production-deploy-full.yaml \
+            --substitutions=_VERSION="${{ github.sha }}" \
+            .

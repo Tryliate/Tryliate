@@ -1,0 +1,11 @@
+.git
+.next/
+.turbo/
+node_modules/
+.env.local
+.env
+README.md
+docs/
+*.tgz
+*.zip
+*.tar.gz

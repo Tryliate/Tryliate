@@ -1,0 +1,34 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalEnv": [
+    "GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET",
+    "LOGO_DEV_SECRET_KEY",
+    "SUPABASE_OAUTH_CLIENT_ID",
+    "SUPABASE_OAUTH_CLIENT_SECRET",
+    "SUPABASE_OAUTH_SECRET",
+    "NEXT_PUBLIC_CLOUD_RUN_URL",
+    "SUPABASE_SECRET_KEY",
+    "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+    "GROQ_API_KEY",
+    "NEXT_PUBLIC_SUPABASE_OAUTH_CLIENT_ID"
+  ],
+  "tasks": {
+    "build-app": {
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**"
+      ]
+    },
+    "lint-check": {
+      "cache": true
+    },
+    "typecheck": {
+      "cache": true
+    },
+    "dev-server": {
+      "cache": false,
+      "persistent": true
+    }
+  }
+}

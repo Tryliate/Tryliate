@@ -1,0 +1,408 @@
+[
+  {
+    "name": "Markitdown",
+    "description": "Convert various file formats (PDF, Word, Excel, images, audio) to Markdown.",
+    "author": "microsoft",
+    "stars": "84,455",
+    "link": "https://github.com/mcp/microsoft/markitdown"
+  },
+  {
+    "name": "Netdata",
+    "description": "AI-powered infrastructure monitoring with real-time metrics, logs, alerts, and ML anomaly detection.",
+    "author": "netdata",
+    "stars": "77,085",
+    "link": "https://github.com/mcp/netdata/mcp-server"
+  },
+  {
+    "name": "Context7",
+    "description": "Up-to-date code docs for any prompt",
+    "author": "upstash",
+    "stars": "39,758",
+    "link": "https://github.com/mcp/upstash/context7"
+  },
+  {
+    "name": "GitHub",
+    "description": "Connect AI assistants to GitHub - manage repos, issues, PRs, and workflows through natural language.",
+    "author": "github",
+    "stars": "25,334",
+    "link": "https://github.com/mcp/github/github-mcp-server"
+  },
+  {
+    "name": "Playwright",
+    "description": "Automate web browsers using accessibility trees for testing and data extraction.",
+    "author": "microsoft",
+    "stars": "24,581",
+    "link": "https://github.com/mcp/microsoft/playwright-mcp"
+  },
+  {
+    "name": "ChromeDevTools",
+    "description": "MCP server for Chrome DevTools",
+    "author": "ChromeDevTools",
+    "stars": "17,470",
+    "link": "https://github.com/mcp/ChromeDevTools/chrome-devtools-mcp"
+  },
+  {
+    "name": "Serena",
+    "description": "Semantic code retrieval & editing tools for coding agents.",
+    "author": "oraios",
+    "stars": "17,426",
+    "link": "https://github.com/mcp/oraios/serena"
+  },
+  {
+    "name": "Firecrawl",
+    "description": "Extract web data with Firecrawl",
+    "author": "firecrawl",
+    "stars": "5,106",
+    "link": "https://github.com/mcp/firecrawl/firecrawl-mcp-server"
+  },
+  {
+    "name": "Unity",
+    "description": "Control the Unity Editor from MCP clients via a Unity bridge + local Python server.",
+    "author": "CoplayDev",
+    "stars": "4,352",
+    "link": "https://github.com/mcp/coplaydev/unity-mcp"
+  },
+  {
+    "name": "Notion",
+    "description": "Official MCP server for Notion API",
+    "author": "makenotion",
+    "stars": "3,608",
+    "link": "https://github.com/mcp/makenotion/notion-mcp-server"
+  },
+  {
+    "name": "Azure MCP Server",
+    "description": "All Azure MCP tools to create a seamless connection between AI agents and Azure services.",
+    "author": "microsoft",
+    "stars": "2,339",
+    "link": "https://github.com/mcp/com.microsoft/azure"
+  },
+  {
+    "name": "Supabase",
+    "description": "MCP server for interacting with the Supabase platform",
+    "author": "supabase-community",
+    "stars": "2,338",
+    "link": "https://github.com/mcp/com.supabase/mcp"
+  },
+  {
+    "name": "DBHub",
+    "description": "Minimal Database MCP Server for PostgreSQL, MySQL, SQL Server, SQLite, MariaDB",
+    "author": "bytebase",
+    "stars": "1,751",
+    "link": "https://github.com/mcp/bytebase/dbhub"
+  },
+  {
+    "name": "Microsoft Learn",
+    "description": "Enables clients like GitHub Copilot and other AI agents to bring trusted and up-to-date information directly from Microsoft's official documentation.",
+    "author": "MicrosoftDocs",
+    "stars": "1,168",
+    "link": "https://github.com/mcp/microsoftdocs/mcp"
+  },
+  {
+    "name": "Stripe",
+    "description": "MCP server integrating with Stripe - tools for customers, products, payments, and more.",
+    "author": "stripe",
+    "stars": "1,160",
+    "link": "https://github.com/mcp/com.stripe/mcp"
+  },
+  {
+    "name": "Terraform",
+    "description": "Generate more accurate Terraform and automate workflows for HCP Terraform and Terraform Enterprise",
+    "author": "hashicorp",
+    "stars": "1,103",
+    "link": "https://github.com/mcp/hashicorp/terraform-mcp-server"
+  },
+  {
+    "name": "Azure DevOps",
+    "description": "Interact with Azure DevOps services like repositories, work items, builds, releases, test plans, and code search.",
+    "author": "microsoft",
+    "stars": "1,100",
+    "link": "https://github.com/mcp/microsoft/azure-devops-mcp"
+  },
+  {
+    "name": "Nuxt",
+    "description": "MCP server helping models understand your Vite/Nuxt app.",
+    "author": "antfu",
+    "stars": "880",
+    "link": "https://github.com/mcp/antfu/nuxt-mcp"
+  },
+  {
+    "name": "Mongodb",
+    "description": "MongoDB Model Context Protocol Server",
+    "author": "mongodb-js",
+    "stars": "865",
+    "link": "https://github.com/mcp/mongodb-js/mongodb-mcp-server"
+  },
+  {
+    "name": "Apify",
+    "description": "Apify MCP server provides access to a marketplace for web scraping and data extraction tools.",
+    "author": "apify",
+    "stars": "652",
+    "link": "https://github.com/mcp/com.apify/apify-mcp-server"
+  },
+  {
+    "name": "Elasticsearch",
+    "description": "MCP server for connecting to Elasticsearch data and indices.",
+    "author": "elastic",
+    "stars": "573",
+    "link": "https://github.com/mcp/elastic/mcp-server-elasticsearch"
+  },
+  {
+    "name": "Neon",
+    "description": "MCP server for interacting with Neon Management API and databases",
+    "author": "neondatabase",
+    "stars": "528",
+    "link": "https://github.com/mcp/neondatabase/mcp-server-neon"
+  },
+  {
+    "name": "Chroma",
+    "description": "Provides data retrieval capabilities powered by Chroma, enabling AI models to create collections over generated data and user inputs.",
+    "author": "chroma-core",
+    "stars": "446",
+    "link": "https://github.com/mcp/chroma-core/chroma-mcp"
+  },
+  {
+    "name": "Monday",
+    "description": "MCP server for monday.com integration.",
+    "author": "mondaycom",
+    "stars": "350",
+    "link": "https://github.com/mcp/com.monday/monday.com"
+  },
+  {
+    "name": "Imagesorcery",
+    "description": "Local image processing with computer vision capabilities including object detection, OCR, and editing.",
+    "author": "sunriseapps",
+    "stars": "257",
+    "link": "https://github.com/mcp/sunriseapps/imagesorcery-mcp"
+  },
+  {
+    "name": "Azure AI Foundry",
+    "description": "An experimental MCP server implementation for Azure AI Foundry exposing tools for models, knowledge, and deployment.",
+    "author": "azure-ai-foundry",
+    "stars": "226",
+    "link": "https://github.com/mcp/azure-ai-foundry/mcp-foundry"
+  },
+  {
+    "name": "Todoist",
+    "description": "A set of tools to connect to AI agents, to allow them to use Todoist on a user's behalf.",
+    "author": "Doist",
+    "stars": "217",
+    "link": "https://github.com/mcp/doist/todoist-ai"
+  },
+  {
+    "name": "Dynatrace",
+    "description": "Model Context Protocol server for Dynatrace - access logs, events, metrics from Dynatrace via MCP.",
+    "author": "dynatrace-oss",
+    "stars": "184",
+    "link": "https://github.com/mcp/dynatrace-oss/Dynatrace-mcp"
+  },
+  {
+    "name": "Hugging Face",
+    "description": "Access Hugging Face models, datasets, Spaces, papers, collections via MCP.",
+    "author": "huggingface",
+    "stars": "165",
+    "link": "https://github.com/mcp/huggingface/hf-mcp-server"
+  },
+  {
+    "name": "Glean Remote MCP Server",
+    "description": "Remote MCP Server that securely connects Glean Enterprise Knowledge with your IDE, LLM, or agents.",
+    "author": "gleanwork",
+    "stars": "154",
+    "link": "https://github.com/mcp/com.glean/mcp"
+  },
+  {
+    "name": "Atlassian",
+    "description": "Remote MCP Server that securely connects Jira and Confluence with your LLM, IDE, or agent platform of choice.",
+    "author": "atlassian",
+    "stars": "152",
+    "link": "https://github.com/mcp/atlassian/atlassian-mcp-server"
+  },
+  {
+    "name": "Logfire",
+    "description": "Provides access to OpenTelemetry traces and metrics through Logfire.",
+    "author": "pydantic",
+    "stars": "129",
+    "link": "https://github.com/mcp/pydantic/logfire-mcp"
+  },
+  {
+    "name": "Postman",
+    "description": "A basic MCP server to operate on the Postman API.",
+    "author": "postmanlabs",
+    "stars": "126",
+    "link": "https://github.com/mcp/com.postman/postman-mcp-server"
+  },
+  {
+    "name": "Azure Kubernetes Service",
+    "description": "Interact with Azure Kubernetes Service (AKS) from MCP clients.",
+    "author": "Azure",
+    "stars": "102",
+    "link": "https://github.com/mcp/azure/aks-mcp"
+  },
+  {
+    "name": "Webflow",
+    "description": "AI-powered design and management for Webflow Sites",
+    "author": "webflow",
+    "stars": "93",
+    "link": "https://github.com/mcp/com.webflow/mcp"
+  },
+  {
+    "name": "Octopus Deploy",
+    "description": "Deliver software to Kubernetes, multi-cloud, on-prem infrastructure, and anywhere else",
+    "author": "OctopusDeploy",
+    "stars": "92",
+    "link": "https://github.com/mcp/octopusdeploy/mcp-server"
+  },
+  {
+    "name": "Fabric Real-Time Intelligence",
+    "description": "Query Eventhouse/ADX with KQL and manage Eventstreams.",
+    "author": "microsoft",
+    "stars": "79",
+    "link": "https://github.com/mcp/microsoft/fabric-rti-mcp"
+  },
+  {
+    "name": "Snyk",
+    "description": "Easily find and fix security issues in your applications leveraging Snyk platform capabilities.",
+    "author": "snyk",
+    "stars": "72",
+    "link": "https://github.com/mcp/io.snyk/mcp"
+  },
+  {
+    "name": "Figma MCP Server",
+    "description": "The Figma MCP server brings Figma design context directly into your AI workflow.",
+    "author": "figma",
+    "stars": "70",
+    "link": "https://github.com/mcp/com.figma.mcp/mcp"
+  },
+  {
+    "name": "Sonatype Dependency Management",
+    "description": "Sonatype component intelligence: versions, security analysis, and Trust Score recommendations",
+    "author": "sonatype",
+    "stars": "59",
+    "link": "https://github.com/mcp/com.sonatype/dependency-management-mcp-server"
+  },
+  {
+    "name": "Codacy",
+    "description": "MCP Server for the Codacy API, enabling access to repositories, files, quality, coverage, security and more.",
+    "author": "codacy",
+    "stars": "55",
+    "link": "https://github.com/mcp/codacy/codacy-mcp-server"
+  },
+  {
+    "name": "DeepWiki",
+    "description": "Devin-generated docs for any public repo",
+    "author": "CognitionAI",
+    "stars": "54",
+    "link": "https://github.com/mcp/cognitionai/deepwiki"
+  },
+  {
+    "name": "Arm MCP Server",
+    "description": "Official Arm MCP server for code migration, optimization, and Arm architecture guidance",
+    "author": "arm",
+    "stars": "52",
+    "link": "https://github.com/mcp/arm/arm-mcp"
+  },
+  {
+    "name": "Clarity",
+    "description": "Fetch Clarity analytics via MCP clients.",
+    "author": "microsoft",
+    "stars": "52",
+    "link": "https://github.com/mcp/microsoft/clarity-mcp-server"
+  },
+  {
+    "name": "Amplitude",
+    "description": "Search, access, and get insights on your Amplitude data",
+    "author": "amplitude",
+    "stars": "42",
+    "link": "https://github.com/mcp/amplitude/mcp-server-guide"
+  },
+  {
+    "name": "PagerDuty",
+    "description": "PagerDuty's official MCP server which provides tools to interact with your PagerDuty account.",
+    "author": "PagerDuty",
+    "stars": "38",
+    "link": "https://github.com/mcp/PagerDuty/pagerduty-mcp"
+  },
+  {
+    "name": "Microsoft MCP Server for Enterprise",
+    "description": "Official Microsoft MCP Server to query Microsoft Entra data using natural language",
+    "author": "microsoft",
+    "stars": "20",
+    "link": "https://github.com/mcp/microsoft/EnterpriseMCP"
+  },
+  {
+    "name": "Launchdarkly",
+    "description": "Official LaunchDarkly MCP Server for feature flag management and experimentation.",
+    "author": "launchdarkly",
+    "stars": "17",
+    "link": "https://github.com/mcp/launchdarkly/mcp-server"
+  },
+  {
+    "name": "The MCP server for GoReleaser",
+    "description": "GoReleaser MCP server",
+    "author": "goreleaser",
+    "stars": "14",
+    "link": "https://github.com/mcp/goreleaser/mcp"
+  },
+  {
+    "name": "Dev Box",
+    "description": "This server enables natural language interactions for developer-focused operations like managing Dev Boxes.",
+    "author": "microsoft",
+    "stars": "11",
+    "link": "https://github.com/mcp/microsoft/devbox-mcp-server"
+  },
+  {
+    "name": "Axiom",
+    "description": "List datasets, schemas, run APL queries, and use prompts for exploration, anomalies, and monitoring.",
+    "author": "axiomhq",
+    "stars": "9",
+    "link": "https://github.com/mcp/co.axiom/mcp"
+  },
+  {
+    "name": "prompts.chat MCP Server",
+    "description": "Search and retrieve AI prompts from prompts.chat, the social platform for AI prompts.",
+    "author": "f",
+    "stars": "6",
+    "link": "https://github.com/mcp/f/prompts.chat-mcp"
+  },
+  {
+    "name": "Zapier",
+    "description": "Zapier MCP is a remote MCP server that gives your AI direct access to 8,000+ apps and 30,000+ actions.",
+    "author": "zapier",
+    "stars": "6",
+    "link": "https://github.com/mcp/zapier/zapier-mcp"
+  },
+  {
+    "name": "Stackhawk",
+    "description": "An MCP server that provides interaction with StackHawk's security scanning platform.",
+    "author": "stackhawk",
+    "stars": "5",
+    "link": "https://github.com/mcp/com.stackhawk/stackhawk"
+  },
+  {
+    "name": "Intercom",
+    "description": "Enable AI agents to securely access and interact with your Intercom data whenever helpful.",
+    "author": "intercom",
+    "stars": "4",
+    "link": "https://github.com/mcp/intercom/intercom-mcp-server"
+  },
+  {
+    "name": "JFrog Remote MCP Server",
+    "description": "MCP Server for JFrog, providing tools for development and artifact management.",
+    "author": "jfrog",
+    "stars": "4",
+    "link": "https://github.com/mcp/jfrog/jfrog-mcp-server"
+  },
+  {
+    "name": "Stack Overflow MCP Server",
+    "description": "Access Stack Overflow's trusted and verified technical questions and answers.",
+    "author": "StackExchange",
+    "stars": "2",
+    "link": "https://github.com/mcp/com.stackoverflow.mcp/mcp"
+  },
+  {
+    "name": "Box",
+    "description": "Securely connect AI agents to your enterprise content in Box",
+    "author": "box",
+    "stars": "",
+    "link": "https://github.com/mcp/box/mcp-server-box-remote"
+  }
+]

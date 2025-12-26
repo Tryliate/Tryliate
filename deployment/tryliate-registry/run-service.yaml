@@ -1,0 +1,86 @@
+﻿apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  annotations:
+    run.googleapis.com/build-enable-automatic-updates: 'false'
+    run.googleapis.com/build-id: f35f737c-7ebd-462a-af6b-77594e4faece
+    run.googleapis.com/build-image-uri: us-central1-docker.pkg.dev/tryliate-production-v1/cloud-run-source-deploy/tryliate-registry
+    run.googleapis.com/build-name: projects/374665986758/locations/us-central1/builds/f35f737c-7ebd-462a-af6b-77594e4faece
+    run.googleapis.com/build-source-location: gs://run-sources-tryliate-production-v1-us-central1/services/tryliate-registry/1766362188.166793-fbc43f47bd8d430b97bdcd6d1f708047.zip#1766362195492335
+    run.googleapis.com/client-name: gcloud
+    run.googleapis.com/client-version: 548.0.0
+    run.googleapis.com/ingress: all
+    run.googleapis.com/ingress-status: all
+    run.googleapis.com/maxScale: '12'
+    run.googleapis.com/operation-id: ce1be820-a4f8-460d-849a-2c3cb536e769
+    run.googleapis.com/urls: '["https://tryliate-registry-374665986758.us-central1.run.app","https://tryliate-registry-nh767yfnoq-uc.a.run.app"]'
+    serving.knative.dev/creator: officialvinodhatti@gmail.com
+    serving.knative.dev/lastModifier: officialvinodhatti@gmail.com
+  creationTimestamp: '2025-12-21T22:34:16.693600Z'
+  generation: 10
+  labels:
+    cloud.googleapis.com/location: us-central1
+  name: tryliate-registry
+  namespace: '374665986758'
+  resourceVersion: AAZGf0HNr4s
+  selfLink: /apis/serving.knative.dev/v1/namespaces/374665986758/services/tryliate-registry
+  uid: 499a4f98-11a4-443b-828b-643cff4baf36
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/maxScale: '12'
+        run.googleapis.com/client-name: gcloud
+        run.googleapis.com/client-version: 548.0.0
+        run.googleapis.com/startup-cpu-boost: 'true'
+      labels:
+        client.knative.dev/nonce: tnfwphrrug
+        run.googleapis.com/startupProbeType: Default
+    spec:
+      containerConcurrency: 80
+      containers:
+      - env:
+        - name: SUPABASE_URL
+          value: https://edtfhsblomgamobizkbo.supabase.co
+        - name: SUPABASE_SERVICE_ROLE_KEY
+          value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVkdGZoc2Jsb21nYW1vYml6a2JvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NjE3MzcxMSwiZXhwIjoyMDgxNzQ5NzExfQ.PGL7-BcL1ruEoOX1aPtP9tnpv_jQaeb4i1VjsOXxNHg
+        image: us-central1-docker.pkg.dev/tryliate-production-v1/cloud-run-source-deploy/tryliate-registry@sha256:229cd45a4eeb31da04b6ab0e6794b07ed385f9386453e855707380096c5e5dc6
+        ports:
+        - containerPort: 8080
+          name: http1
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 512Mi
+        startupProbe:
+          failureThreshold: 1
+          periodSeconds: 240
+          tcpSocket:
+            port: 8080
+          timeoutSeconds: 240
+      serviceAccountName: 374665986758-compute@developer.gserviceaccount.com
+      timeoutSeconds: 300
+  traffic:
+  - latestRevision: true
+    percent: 100
+status:
+  address:
+    url: https://tryliate-registry-nh767yfnoq-uc.a.run.app
+  conditions:
+  - lastTransitionTime: '2025-12-22T00:10:39.053707Z'
+    status: 'True'
+    type: Ready
+  - lastTransitionTime: '2025-12-22T00:10:33.357024Z'
+    status: 'True'
+    type: ConfigurationsReady
+  - lastTransitionTime: '2025-12-22T00:10:39.018418Z'
+    status: 'True'
+    type: RoutesReady
+  latestCreatedRevisionName: tryliate-registry-00010-p6t
+  latestReadyRevisionName: tryliate-registry-00010-p6t
+  observedGeneration: 10
+  traffic:
+  - latestRevision: true
+    percent: 100
+    revisionName: tryliate-registry-00010-p6t
+  url: https://tryliate-registry-nh767yfnoq-uc.a.run.app
