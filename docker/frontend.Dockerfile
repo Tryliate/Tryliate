@@ -7,7 +7,7 @@ FROM base AS deps
 WORKDIR /app
 COPY package.json bun.lock ./
 COPY server/package.json ./server/package.json
-RUN bun install --frozen-lockfile
+RUN bun install --no-frozen-lockfile
 
 # 3. Builder
 FROM base AS builder
