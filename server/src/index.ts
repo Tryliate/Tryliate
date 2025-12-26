@@ -165,6 +165,45 @@ app.get('/health', async (req: Request, res: Response) => {
   }
 });
 
+app.get('/api/debug/schema-repair', async (req: Request, res: Response) => {
+  try {
+    console.log('🛠️ DEBUG: Repairing Schema...');
+
+    // 1. Check if foundry_nodes exists and has 'data' column
+    const resNodes = await pool.query(`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'foundry_nodes'
+    `);
+
+    const columns = resNodes.rows.map((r: any) => r.column_name);
+    let message = `Current columns: ${columns.join(', ')}. `;
+
+    if (columns.length > 0) {
+      if (!columns.includes('data')) {
+        if (columns.includes('meta')) {
+          await pool.query('ALTER TABLE foundry_nodes RENAME COLUMN meta TO data');
+          message += 'Renamed meta to data. ';
+        } else {
+          await pool.query('ALTER TABLE foundry_nodes ADD COLUMN data JSONB NOT NULL DEFAULT \'{}\'');
+          message += 'Added missing data column. ';
+        }
+      } else {
+        message += 'Data column already exists. ';
+      }
+    } else {
+      // Table doesn't exist, run full init
+      await pool.query(BYOI_SCHEMA_SQL);
+      message += 'Table didn\'t exist, ran full BYOI_SCHEMA_SQL. ';
+    }
+
+    res.json({ success: true, message });
+  } catch (err: any) {
+    console.error('❌ Schema Repair Failed:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/api/debug/schema-init', async (req: Request, res: Response) => {
   try {
     console.log('🛠️ DEBUG: Initializing Schema via Pool...');
@@ -175,6 +214,7 @@ app.get('/api/debug/schema-init', async (req: Request, res: Response) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 const BYOI_SCHEMA_SQL = `
 -- 🔱 Neural Core Extension Support
