@@ -72,8 +72,12 @@ jobs:
 
       - name: "Submit Cloud Build"
         run: |
+          # Create a custom staging bucket to avoid default bucket permission issues
+          gcloud storage buckets create gs://${{ env.GCP_PROJECT_ID }}_build_staging --location=us-central1 || true
+
           gcloud builds submit \
             --config deployment/shared/production-deploy-full.yaml \
             --substitutions=_VERSION="${{ github.sha }}" \
             --region=us-central1 \
+            --gcs-source-staging-dir="gs://${{ env.GCP_PROJECT_ID }}_build_staging/source" \
             .
