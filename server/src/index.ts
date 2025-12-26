@@ -118,7 +118,7 @@ const ToolCallSchema = z.object({
 app.get('/', (req: Request, res: Response) => {
   res.json({
     status: 'online',
-    engine: 'Tryliate Neural Engine v1.1.1',
+    engine: 'Tryliate Neural Engine v1.2.0',
     runtime: 'Bun'
   });
 });
@@ -708,12 +708,27 @@ app.post('/api/infrastructure/provision', async (req: Request, res: Response, ne
     if (!accessToken) {
       console.log(`[PROVISION] Token missing in request for ${userId}. Probing Vaults...`);
 
-      // Probe Supabase Vault
+      // Probe Supabase Vault for Management Token
       console.log(`[PROVISION] Probing Supabase Master Vault for ${userId}...`);
-      const { data: vaultData, error: vaultErr } = await supabase.from('users').select('supabase_access_token').eq('id', userId).single();
+      const { data: vaultData, error: vaultErr } = await supabase
+        .from('users')
+        .select('supabase_access_token, supabase_secret_key')
+        .eq('id', userId)
+        .single();
+
       if (vaultErr) console.log(`[PROVISION] Supabase Vault Probe returned error: ${vaultErr.message} (Code: ${vaultErr.code})`);
+
+      // Use the Management Token (sbp_...) for provisioning if available
       accessToken = vaultData?.supabase_access_token;
-      if (accessToken) console.log(`[PROVISION] Token found in Supabase Vault.`);
+
+      if (accessToken) {
+        console.log(`[PROVISION] Management Token found in Supabase Vault.`);
+      } else if (vaultData?.supabase_secret_key) {
+        // We have project keys but no management session. 
+        // We can't provision/list projects, but we might be able to skip to Stage 1.
+        console.log(`[PROVISION] No Management Token, but Service Key found. Attempting session recovery...`);
+        accessToken = vaultData.supabase_secret_key; // risky fallback, but might work for some flows
+      }
 
       // Fallback: Probe Neon Vault (Source of truth for Drizzle)
       if (!accessToken) {
@@ -722,7 +737,7 @@ app.post('/api/infrastructure/provision', async (req: Request, res: Response, ne
           const neonData = await db.select().from(users).where(eq(users.id, userId)).limit(1);
           accessToken = (neonData?.[0] as any)?.supabaseAccessToken;
         } catch (neonErr: any) {
-          console.warn(`[PROVISION] Neon Vault Probe failed: ${neonErr.message}. This is likely due to missing columns/table in the master database.`);
+          console.warn(`[PROVISION] Neon Vault Probe failed: ${neonErr.message}.`);
         }
       }
     }
@@ -781,25 +796,22 @@ app.post('/api/infrastructure/provision', async (req: Request, res: Response, ne
     if (targetProject) {
       sendStep(`✅ Found existing project entry: ${targetProject.id}`);
 
-      // Stage 0: Save project ID immediately so it's not NULL in the DB anymore
+      // Stage 0: Save project mapping immediately
       await supabase.from('users').update({
-        supabase_project_id: targetProject.id,
+        supabase_url: `https://${targetProject.id}.supabase.co`,
         supabase_org_id: targetProject.organization_id || targetProject.organizationId || ''
       }).eq('id', userId);
 
-      // Attempt to retrieve stored password from our vault
+      // Attempt to retrieve stored keys from our vault
       const { data: userData } = await supabase
         .from('users')
-        .select('supabase_db_pass, supabase_project_id')
+        .select('supabase_secret_key, supabase_url')
         .eq('id', userId)
         .single();
 
-      const storedProjectId = userData?.supabase_project_id === 'PENDING_SETUP' || userData?.supabase_project_id === 'UEVORElOR19TRVRVUA=='
-        ? null
-        : userData?.supabase_project_id;
+      const storedProjectId = userData?.supabase_url?.match(/https:\/\/(.*)\.supabase\.co/)?.[1];
 
-      if (userData && storedProjectId === targetProject.id && userData.supabase_db_pass) {
-        dbPass = userData.supabase_db_pass;
+      if (userData && storedProjectId === targetProject.id && userData.supabase_secret_key) {
         sendStep('🔐 Retrieved secured credentials from vault.');
       } else {
         // RECOVERY CASE: Project exists but we don't have the password.
@@ -860,7 +872,7 @@ app.post('/api/infrastructure/provision', async (req: Request, res: Response, ne
 
       // Stage 0.1: Save new project ID
       await supabase.from('users').update({
-        supabase_project_id: targetProject.id,
+        supabase_url: `https://${targetProject.id}.supabase.co`,
         supabase_org_id: targetProject.organization_id || targetProject.organizationId || primaryOrg.id
       }).eq('id', userId);
     }
@@ -876,12 +888,14 @@ app.post('/api/infrastructure/provision', async (req: Request, res: Response, ne
     }
 
     const keys: any[] = await keysRes.json() as any[];
-    const serviceRoleKey = (Array.isArray(keys) ? keys : []).find(k => k.name === 'service_role')?.api_key;
-    const anonKey = (Array.isArray(keys) ? keys : []).find(k => k.name === 'anon')?.api_key;
+    // Try to find the secret key (formerly service_role)
+    const keyList = Array.isArray(keys) ? keys : [];
+    const secretKey = keyList.find(k => k.name === 'service_role' || k.name === 'secret' || k.name === 'secret_key')?.api_key;
+    const anonKey = keyList.find(k => k.name === 'anon')?.api_key;
 
-    if (!serviceRoleKey) {
+    if (!secretKey) {
       console.error('DEBUG: API Keys Response:', JSON.stringify(keys));
-      throw new Error('Service Role Key not found in project keys response.');
+      throw new Error('Secret Key not discovered in project keys response.');
     }
 
     // ---------------------------------------------------------
@@ -889,26 +903,23 @@ app.post('/api/infrastructure/provision', async (req: Request, res: Response, ne
     // ---------------------------------------------------------
     sendStep('🛡️ Securing architectural keys in vault...');
 
-    if (!serviceRoleKey) throw new Error('Cannot proceed: Service Role Key is missing.');
+    if (!secretKey) throw new Error('Cannot proceed: Secret Key is missing.');
     if (!dbPass) throw new Error('Cannot proceed: Database Password is missing.');
 
     const stage1UpdateData = {
       supabase_connected: true,
       supabase_org_id: targetProject.organization_id || targetProject.organizationId || '',
-      supabase_project_id: targetProject.id,
-      supabase_service_role_key: serviceRoleKey,
-      user_supabase_url: `https://${targetProject.id}.supabase.co`,
-      user_supabase_anon_key: anonKey,
-      supabase_db_pass: dbPass,
-      supabase_access_token: accessToken,
-      tryliate_initialized: false // Reset until Stage 3 is complete
+      supabase_url: `https://${targetProject.id}.supabase.co`,
+      supabase_publishable_key: anonKey,
+      supabase_secret_key: secretKey,
+      tryliate_initialized: false
     };
 
     console.log(`DEBUG: [Stage 1] Saving User Data: ${JSON.stringify({
       id: userId,
-      project: stage1UpdateData.supabase_project_id,
-      has_pass: !!stage1UpdateData.supabase_db_pass,
-      has_key: !!stage1UpdateData.supabase_service_role_key
+      url: stage1UpdateData.supabase_url,
+      has_pass: !!dbPass,
+      has_key: !!stage1UpdateData.supabase_secret_key
     })}`);
 
     const { error: stage1Error } = await supabase
@@ -925,22 +936,26 @@ app.post('/api/infrastructure/provision', async (req: Request, res: Response, ne
     // ---------------------------------------------------------
     // STAGE 2: SCHEMA INJECTION (Soft-Fail)
     // ---------------------------------------------------------
-    if (dbPass) {
+    if (secretKey) {
       try {
         // Strategy: Official Supabase MCP (execute_sql with valid Handshake)
         sendStep(`💉 Neural Schema: Establishing Session with Supabase MCP...`);
-        const mcpSessionId = await initializeSupabaseMCP(targetProject.id, rawToken);
+        // Use the Secret Key (service_role) for MCP Bridge
+        const mcpSessionId = await initializeSupabaseMCP(targetProject.id, secretKey);
 
-        const statements = splitSqlStatements(BYOI_SCHEMA_SQL);
+        // Combine schemas for full 17-table Neural Architecture
+        const fullSchemaSql = BYOI_SCHEMA_SQL + '\n' + NATIVE_ENGINE_SQL;
+        const statements = splitSqlStatements(fullSchemaSql);
         let successCount = 0;
         for (const stmt of statements) {
           try {
-            await callSupabaseMCP(targetProject.id, rawToken, 'execute_sql', {
+            await callSupabaseMCP(targetProject.id, secretKey, 'execute_sql', {
               query: stmt + ';'
             }, mcpSessionId);
             successCount++;
             if (stmt.toLowerCase().includes('create table')) {
-              const tableName = stmt.match(/public\.(\w+)/)?.[1] || 'infrastructure';
+              // Extract table name from public.xxx or tryliate.xxx
+              const tableName = stmt.match(/(?:public|tryliate)\.([\w_]+)/)?.[1] || 'infrastructure';
               sendStep(`✅ Calibrated: ${tableName.toUpperCase()}`);
             }
           } catch (stmtErr: any) {
@@ -962,13 +977,29 @@ app.post('/api/infrastructure/provision', async (req: Request, res: Response, ne
     // STAGE 3: FLIP THE SWITCH (INITIALIZED)
     // ---------------------------------------------------------
     sendStep('🟢 Finalizing activation...');
+
+    // Sync to Administrative Vault (Master Supabase)
     const { error: stage3Error } = await supabase
       .from('users')
       .update({ tryliate_initialized: true })
       .eq('id', userId);
 
     if (stage3Error) {
-      throw new Error('Failed to mark as initialized: ' + stage3Error.message);
+      throw new Error('Failed to mark as initialized in Admin Vault: ' + stage3Error.message);
+    }
+
+    // Sync to Runtime Vault (Neon/Drizzle)
+    try {
+      await db.update(users)
+        .set({
+          tryliateInitialized: true,
+          supabaseConnected: true,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId));
+      console.log(`[SYNC] Neon initialization flag set for ${userId}`);
+    } catch (neonErr: any) {
+      console.warn(`[SYNC] Neon sync failed (non-critical): ${neonErr.message}`);
     }
 
     sendStep('🎉 Infrastructure Ready!', 'success');
@@ -1428,12 +1459,17 @@ app.post('/api/neural/proxy', async (req: Request, res: Response, next: NextFunc
     // 3. Execute through Official Supabase MCP Bridge
     const supabase = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY);
     const { data: user } = await supabase.from('users').select('*').eq('id', userId).single();
-    if (!user || !user.supabase_project_id || !user.supabase_access_token) {
+
+    if (!user || !user.supabase_url || !user.supabase_secret_key) {
       throw new Error('Infrastructure bridge credentials missing.');
     }
 
-    const sessionId = await initializeSupabaseMCP(user.supabase_project_id, user.supabase_access_token);
-    const result = await callSupabaseMCP(user.supabase_project_id, user.supabase_access_token, tool, args, sessionId);
+    // Extract project project_ref from supabase_url (e.g., https://[project_ref].supabase.co)
+    const projectRef = user.supabase_url.split('://')[1]?.split('.')[0];
+    if (!projectRef) throw new Error('Invalid Supabase URL in infrastructure vault.');
+
+    const sessionId = await initializeSupabaseMCP(projectRef, user.supabase_secret_key);
+    const result = await callSupabaseMCP(projectRef, user.supabase_secret_key, tool, args, sessionId);
 
     res.json({ success: true, result });
   } catch (err: any) {

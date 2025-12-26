@@ -89,12 +89,18 @@ export const workspaceHistory = pgTable('workspace_history', {
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   email: text('email').unique(),
-  supabaseProjectId: text('supabase_project_id'),
+  fullName: text('full_name'),
+  avatarUrl: text('avatar_url'),
+  supabaseUrl: text('supabase_url'),
+  supabasePublishableKey: text('supabase_publishable_key'),
+  supabaseSecretKey: text('supabase_secret_key'),
+  supabaseOrgId: text('supabase_org_id'),
+  supabaseRefreshToken: text('supabase_refresh_token'),
   supabaseAccessToken: text('supabase_access_token'),
-  supabaseDbPass: text('supabase_db_pass'),
   tryliateInitialized: boolean('tryliate_initialized').default(false),
   supabaseConnected: boolean('supabase_connected').default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
 
 export const foundryNodes = pgTable('foundry_nodes', {
@@ -167,4 +173,15 @@ export const userSettings = pgTable('user_settings', {
   aiModelPreference: text('ai_model_preference').default('gpt-4'),
   metadata: jsonb('metadata').default({}),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+export const flowFeed = pgTable('flow_feed', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name'),
+  description: text('description'),
+  category: text('category'),
+  topology: text('topology'),
+  nodes: jsonb('nodes').default([]),
+  edges: jsonb('edges').default([]),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });

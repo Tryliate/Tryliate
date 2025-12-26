@@ -10,11 +10,20 @@ export class GuardianEnforcer {
    * Validates if a tool call is permitted under the given neural scopes.
    * @returns { success: boolean, reason?: string }
    */
-  static validate(provider: string, tool: string, scopes: NeuralScope[]): { success: boolean; reason?: string } {
-    const scope = scopes.find(s => s.provider === provider);
+  static validate(provider: string, tool: string, scopes: any[]): { success: boolean; reason?: string } {
+    if (!scopes || scopes.length === 0) {
+      return { success: true }; // Discovery Mode
+    }
 
-    // Default: If no scope is defined, we allow for now (Discovery Mode)
-    // In strict mode, we would block.
+    // Support for simple string array (Implicit Allowlist)
+    if (typeof scopes[0] === 'string') {
+      if (scopes.includes(tool)) return { success: true };
+      return { success: false, reason: `Neural Guardian: Tool '${tool}' is NOT AUTHORIZED (Allowlist Check).` };
+    }
+
+    // Support for complex NeuralScope objects
+    const scope = (scopes as NeuralScope[]).find(s => s.provider === provider);
+
     if (!scope) {
       return { success: true };
     }

@@ -87,11 +87,11 @@ export async function GET(request: Request) {
       // 3. Encrypted Architectural Recording (PENDING STATE)
       // 3. Encrypted Architectural Recording (UPDATED)
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-      const serviceRoleKey = process.env.SUPABASE_SECRET_KEY;
+      const secretKey = process.env.SUPABASE_SECRET_KEY;
 
-      if (supabaseUrl && serviceRoleKey) {
+      if (supabaseUrl && secretKey) {
         try {
-          const tryliateSupabase = createClient(supabaseUrl, serviceRoleKey);
+          const tryliateSupabase = createClient(supabaseUrl, secretKey);
 
           console.log(`🔄 Upserting Supabase keys for user ${userId}...`);
 
@@ -112,7 +112,7 @@ export async function GET(request: Request) {
           console.error('❌ Unexpected error during Supabase sync:', err);
         }
       } else {
-        console.warn('⚠️ Missing Service Role Key or Supabase URL. Cannot update user profile.');
+        console.warn('⚠️ Missing Secret Key or Supabase URL. Cannot update user profile.');
       }
 
       console.log('🎉 Neural Handshake Complete. Preparing Redirect...');
