@@ -200,7 +200,7 @@ app.get('/api/debug/schema-repair', async (req: Request, res: Response) => {
       message += 'Foundry: Created table foundry_nodes. ';
     }
 
-    // 2. Repair users (Master Vault)
+    // 2. Repair users (Neon/Drizzle Vault)
     const resUsers = await pool.query(`
       SELECT column_name FROM information_schema.columns WHERE table_name = 'users'
     `);
@@ -213,20 +213,40 @@ app.get('/api/debug/schema-repair', async (req: Request, res: Response) => {
           supabase_project_id TEXT,
           supabase_access_token TEXT,
           supabase_db_pass TEXT,
+          supabase_org_id TEXT,
+          user_supabase_url TEXT,
           tryliate_initialized BOOLEAN DEFAULT false,
           supabase_connected BOOLEAN DEFAULT false,
-          created_at TIMESTAMPTZ DEFAULT now()
+          created_at TIMESTAMPTZ DEFAULT now(),
+          updated_at TIMESTAMPTZ DEFAULT now()
         );
       `);
-      message += 'Users: Created platform users table. ';
+      message += 'Neon: Created users table. ';
     } else {
-      // Ensure specific columns exist
-      const required = ['supabase_project_id', 'supabase_access_token', 'supabase_db_pass', 'supabase_connected'];
+      const required = ['supabase_project_id', 'supabase_access_token', 'supabase_db_pass', 'supabase_connected', 'supabase_org_id', 'user_supabase_url'];
       for (const col of required) {
         if (!userColumns.includes(col)) {
           await pool.query(`ALTER TABLE public.users ADD COLUMN IF NOT EXISTS ${col} TEXT`);
-          message += `Users: Added ${col}. `;
+          message += `Neon: Added ${col}. `;
         }
+      }
+    }
+
+    // 3. Sync to Supabase Master Vault (if keys exist)
+    if (SUPABASE_URL && SUPABASE_SECRET_KEY) {
+      try {
+        const supabase = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY);
+        console.log('🛠️ DEBUG: Probing Supabase Master Vault...');
+        // We can't easily check columns via Supabase JS without a query, so we'll try a dummy insert/select
+        const { error: sbError } = await supabase.from('users').select('id').limit(1);
+        if (sbError && sbError.code === 'PGRST116') {
+          // Table might exist but is empty (this code is handled)
+        } else if (sbError) {
+          console.log(`[REPAIR] Supabase check error: ${sbError.message}. Attempting to run direct SQL via Bridge? No, we use Neon for that. Assuming Supabase is backed by Neon.`);
+          message += `Supabase: Warning - ${sbError.message}. `;
+        }
+      } catch (e: any) {
+        console.warn('Supabase Master Sync Fail:', e.message);
       }
     }
 
@@ -689,9 +709,11 @@ app.post('/api/infrastructure/provision', async (req: Request, res: Response, ne
       console.log(`[PROVISION] Token missing in request for ${userId}. Probing Vaults...`);
 
       // Probe Supabase Vault
+      console.log(`[PROVISION] Probing Supabase Master Vault for ${userId}...`);
       const { data: vaultData, error: vaultErr } = await supabase.from('users').select('supabase_access_token').eq('id', userId).single();
-      if (vaultErr) console.log(`[PROVISION] Supabase Vault Probe returned error: ${vaultErr.message}`);
+      if (vaultErr) console.log(`[PROVISION] Supabase Vault Probe returned error: ${vaultErr.message} (Code: ${vaultErr.code})`);
       accessToken = vaultData?.supabase_access_token;
+      if (accessToken) console.log(`[PROVISION] Token found in Supabase Vault.`);
 
       // Fallback: Probe Neon Vault (Source of truth for Drizzle)
       if (!accessToken) {
