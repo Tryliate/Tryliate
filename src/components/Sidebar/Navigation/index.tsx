@@ -36,7 +36,7 @@ export const Navigation: React.FC<NavigationProps> = ({ activeView, onViewChange
           alignItems: 'center',
           gap: '8px'
         }}>
-          Tryliate
+          Tryliate Studio
           <Badge variant="version">v1.1.1</Badge>
         </div>
 

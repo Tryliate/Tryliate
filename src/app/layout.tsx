@@ -5,7 +5,7 @@ import React from "react";
 const outfit = Outfit({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "Tryliate Platform",
+  title: "Tryliate Studio",
   description: "The connection orchestrator for the AI age.",
 };
 
