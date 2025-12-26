@@ -75,4 +75,5 @@ jobs:
           gcloud builds submit \
             --config deployment/shared/production-deploy-full.yaml \
             --substitutions=_VERSION="${{ github.sha }}" \
+            --region=us-central1 \
             .
