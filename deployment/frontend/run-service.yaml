@@ -40,7 +40,7 @@ spec:
             - name: NEXT_PUBLIC_LOGO_DEV_PUBLISHABLE_KEY
               value: pk_KEBuu6OhQjqHQIlO1PHMMQ
             - name: NEXT_PUBLIC_SUPABASE_OAUTH_CLIENT_ID
-              value: a9d07a52-e377-4656-8149-802194c03bdb
+              value: 4e250574-7502-48b4-bae3-d986ef752048
             - name: SUPABASE_SECRET_KEY
               valueFrom:
                 secretKeyRef:

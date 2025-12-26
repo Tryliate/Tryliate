@@ -29,7 +29,7 @@ export function useMasterHandshake(user: any, supabaseProjectId: string | null, 
       const codeChallenge = await generateCodeChallenge(codeVerifier);
       document.cookie = `mcp_code_verifier=${codeVerifier}; Path=/; SameSite=Lax; Max-Age=3600${window.location.protocol === 'https:' ? '; Secure' : ''}`;
       const userProjectUrl = `https://${supabaseProjectId}.supabase.co`;
-      const clientId = 'a9d07a52-e377-4656-8149-802194c03bdb';
+      const clientId = process.env.NEXT_PUBLIC_SUPABASE_OAUTH_CLIENT_ID || '4e250574-7502-48b4-bae3-d986ef752048';
       const redirectUri = `${window.location.origin}//auth/callback/neural`;
       const state = btoa(crypto.randomUUID()).substring(0, 16);
       setMasterHandshakeStatus('redirecting');

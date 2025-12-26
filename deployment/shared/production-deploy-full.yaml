@@ -22,7 +22,7 @@ steps:
       - "--build-arg"
       - "NEXT_PUBLIC_LOGO_DEV_PUBLISHABLE_KEY=pk_KEBuu6OhQjqHQIlO1PHMMQ"
       - "--build-arg"
-      - "NEXT_PUBLIC_SUPABASE_OAUTH_CLIENT_ID=a9d07a52-e377-4656-8149-802194c03bdb"
+      - "NEXT_PUBLIC_SUPABASE_OAUTH_CLIENT_ID=4e250574-7502-48b4-bae3-d986ef752048"
       - "-t"
       - "us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/frontend:$_VERSION"
       - "-t"
