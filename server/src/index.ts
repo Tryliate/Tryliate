@@ -242,7 +242,7 @@ app.get('/api/debug/schema-repair', async (req: Request, res: Response) => {
         if (sbError && sbError.code === 'PGRST116') {
           // Table might exist but is empty (this code is handled)
         } else if (sbError) {
-          console.log(`[REPAIR] Supabase check error: ${sbError.message}. Attempting to run direct SQL via Bridge? No, we use Neon for that. Assuming Supabase is backed by Neon.`);
+          console.log(`[REPAIR] Supabase check error: ${sbError.message}. Attempting to run direct SQL via Bridge? No, we use the Runtime Database for that.`);
           message += `Supabase: Warning - ${sbError.message}. `;
         }
       } catch (e: any) {
@@ -730,16 +730,7 @@ app.post('/api/infrastructure/provision', async (req: Request, res: Response, ne
         accessToken = vaultData.supabase_secret_key; // risky fallback, but might work for some flows
       }
 
-      // Fallback: Probe Neon Vault (Source of truth for Drizzle)
-      if (!accessToken) {
-        try {
-          console.log(`[PROVISION] Supabase Vault empty. Probing Neon Vault for ${userId}...`);
-          const neonData = await db.select().from(users).where(eq(users.id, userId)).limit(1);
-          accessToken = (neonData?.[0] as any)?.supabaseAccessToken;
-        } catch (neonErr: any) {
-          console.warn(`[PROVISION] Neon Vault Probe failed: ${neonErr.message}.`);
-        }
-      }
+      // No fallback to Neon. BYOI is strictly Supabase-to-Supabase.
     }
 
     if (!accessToken) {
@@ -758,7 +749,7 @@ app.post('/api/infrastructure/provision', async (req: Request, res: Response, ne
     console.log(`[REDIS] Execution count for ${userId}: ${execCount}`);
 
     sendStep('🤖 Trymate: Analyzing architecture quotas...');
-    sendStep(`✅ Calibrating 17-table Neural Architecture...`);
+    sendStep(`✅ Calibrating 17-Table Supabase MCP Architecture...`);
 
     let rawToken = accessToken;
     // 1. List Projects
@@ -988,7 +979,7 @@ app.post('/api/infrastructure/provision', async (req: Request, res: Response, ne
       throw new Error('Failed to mark as initialized in Admin Vault: ' + stage3Error.message);
     }
 
-    // Sync to Runtime Vault (Neon/Drizzle)
+    // Sync to Runtime Vault (Drizzle)
     try {
       await db.update(users)
         .set({
@@ -997,9 +988,9 @@ app.post('/api/infrastructure/provision', async (req: Request, res: Response, ne
           updatedAt: new Date()
         })
         .where(eq(users.id, userId));
-      console.log(`[SYNC] Neon initialization flag set for ${userId}`);
+      console.log(`[SYNC] Runtime initialization flag set for ${userId}`);
     } catch (neonErr: any) {
-      console.warn(`[SYNC] Neon sync failed (non-critical): ${neonErr.message}`);
+      console.warn(`[SYNC] Runtime sync failed (non-critical): ${neonErr.message}`);
     }
 
     sendStep('🎉 Infrastructure Ready!', 'success');
@@ -1036,20 +1027,7 @@ app.post('/api/infrastructure/provision-engine', async (req: Request, res: Respo
     const { data: sbUser } = await supabase.from('users').select('*').eq('id', userId).single();
     targetUser = sbUser;
 
-    if (!targetUser) {
-      try {
-        console.log(`[ENGINE-PROVISION] User not in Supabase vault. Checking Neon for ${userId}...`);
-        const neonUsers = await db.select().from(users).where(eq(users.id, userId)).limit(1);
-        targetUser = neonUsers?.[0];
-        if (targetUser) {
-          // Map Drizzle camelCase to snake_case for the rest of the flow
-          targetUser.supabase_access_token = targetUser.supabaseAccessToken;
-          targetUser.supabase_project_id = targetUser.supabaseProjectId;
-        }
-      } catch (neonErr: any) {
-        console.warn(`[ENGINE-PROVISION] Neon fallback failed: ${neonErr.message}. This is likely due to missing columns in the master database.`);
-      }
-    }
+    // No fallback to Neon. BYOI is strictly Supabase.
 
     if (!targetUser) throw new Error('User profile not found in Neural Vault.');
 
