@@ -165,6 +165,17 @@ app.get('/health', async (req: Request, res: Response) => {
   }
 });
 
+app.get('/api/debug/schema-init', async (req: Request, res: Response) => {
+  try {
+    console.log('🛠️ DEBUG: Initializing Schema via Pool...');
+    await pool.query(BYOI_SCHEMA_SQL);
+    res.json({ success: true, message: 'Schema initialized successfully.' });
+  } catch (err: any) {
+    console.error('❌ Schema Init Failed:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 const BYOI_SCHEMA_SQL = `
 -- 🔱 Neural Core Extension Support
 CREATE EXTENSION IF NOT EXISTS vector;
