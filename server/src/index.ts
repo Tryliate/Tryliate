@@ -663,7 +663,7 @@ app.post('/api/infrastructure/provision', async (req: Request, res: Response, ne
       // Fallback: Probe Neon Vault (Source of truth for Drizzle)
       if (!accessToken) {
         console.log(`[PROVISION] Supabase Vault empty. Probing Neon Vault for ${userId}...`);
-        const { data: neonData } = await (db.select().from(users).where(eq(users.id, userId)).limit(1) as any);
+        const neonData = await db.select().from(users).where(eq(users.id, userId)).limit(1);
         accessToken = (neonData?.[0] as any)?.supabaseAccessToken;
       }
     }
@@ -683,7 +683,8 @@ app.post('/api/infrastructure/provision', async (req: Request, res: Response, ne
     const execCount = await trackExecution(userId);
     console.log(`[REDIS] Execution count for ${userId}: ${execCount}`);
 
-    sendStep('🤖 Trymate: Analyzing infrastructure quotas...');
+    sendStep('🤖 Trymate: Analyzing architecture quotas...');
+    sendStep(`✅ Calibrating 17-table Neural Architecture...`);
 
     let rawToken = accessToken;
     // 1. List Projects
@@ -941,35 +942,35 @@ app.post('/api/infrastructure/provision-engine', async (req: Request, res: Respo
     const supabase = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY);
 
     // Fetch user from Supabase with fallback to Neon
-    let user: any = null;
+    let targetUser: any = null;
     const { data: sbUser } = await supabase.from('users').select('*').eq('id', userId).single();
-    user = sbUser;
+    targetUser = sbUser;
 
-    if (!user) {
+    if (!targetUser) {
       console.log(`[ENGINE-PROVISION] User not in Supabase vault. Checking Neon for ${userId}...`);
-      const { data: neonUsers } = await (db.select().from(users).where(eq(users.id, userId)).limit(1) as any);
-      user = neonUsers?.[0];
-      if (user) {
+      const neonUsers = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+      targetUser = neonUsers?.[0];
+      if (targetUser) {
         // Map Drizzle camelCase to snake_case for the rest of the flow
-        user.supabase_access_token = user.supabaseAccessToken;
-        user.supabase_project_id = user.supabaseProjectId;
+        targetUser.supabase_access_token = targetUser.supabaseAccessToken;
+        targetUser.supabase_project_id = targetUser.supabaseProjectId;
       }
     }
 
-    if (!user) throw new Error('User profile not found in Neural Vault.');
+    if (!targetUser) throw new Error('User profile not found in Neural Vault.');
 
-    if (!accessToken) accessToken = user.supabase_access_token;
+    if (!accessToken) accessToken = targetUser.supabase_access_token;
     if (!accessToken) throw new Error('Neural calibration incomplete: Supabase authorization missing.');
 
     sendStep('⚡ Establishing MCP Bridge Connection...');
-    const mcpSessionId = await initializeSupabaseMCP(user.supabase_project_id, user.supabase_access_token);
+    const mcpSessionId = await initializeSupabaseMCP(targetUser.supabase_project_id, targetUser.supabase_access_token);
 
     sendStep('💉 Injecting Native Engine Schema into Supabase...');
     const statements = splitSqlStatements(NATIVE_ENGINE_SQL);
     let success = 0;
     for (const stmt of statements) {
       try {
-        await callSupabaseMCP(user.supabase_project_id, user.supabase_access_token, 'execute_sql', { query: stmt + ';' }, mcpSessionId);
+        await callSupabaseMCP(targetUser.supabase_project_id, targetUser.supabase_access_token, 'execute_sql', { query: stmt + ';' }, mcpSessionId);
         success++;
       } catch (e) { }
     }
