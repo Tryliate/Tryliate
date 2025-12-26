@@ -31,20 +31,13 @@ export function useInfrastructure(
     setNotification({ type: 'info', message: 'Connecting Supabase MCP...' });
 
     try {
-      const { data: userData } = await supabase.from('users').select('supabase_access_token').eq('id', user.id).single();
-      const accessToken = userData?.supabase_access_token;
-      if (!accessToken) {
-        setIsProvisioning(false);
-        setIsSmartConnectOpen(true);
-        setNotification({ type: 'info', message: 'Handshake required to proceed.' });
-        return;
-      }
+      // Backend handles token retrieval from the Administrative Vault
 
       const backendUrl = process.env.NEXT_PUBLIC_CLOUD_RUN_URL || 'https://tryliate-backend-374665986758.us-east1.run.app';
       const response = await fetch(`${backendUrl}/api/infrastructure/provision?t=${Date.now()}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, accessToken }),
+        body: JSON.stringify({ userId: user.id }),
         signal: AbortSignal.timeout(120000)
       });
 

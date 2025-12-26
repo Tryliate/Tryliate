@@ -54,7 +54,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 // --- REQUEST SCHEMAS ---
 const ProvisionSchema = z.object({
-  accessToken: z.string().min(10),
+  accessToken: z.string().optional(),
   userId: z.string().uuid()
 });
 
@@ -605,7 +605,22 @@ app.post('/api/infrastructure/provision', async (req: Request, res: Response, ne
   };
 
   try {
-    const { accessToken, userId } = ProvisionSchema.parse(req.body);
+    let { accessToken, userId } = ProvisionSchema.parse(req.body);
+
+    // Initialize Admin Supabase Client Early
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    });
+
+    if (!accessToken) {
+      console.log(`[PROVISION] Token missing for ${userId}. Fetching from Vault...`);
+      const { data: vaultData } = await supabase.from('users').select('supabase_access_token').eq('id', userId).single();
+      accessToken = vaultData?.supabase_access_token;
+    }
+
+    if (!accessToken) {
+      throw new Error('Supabase Authorization is missing or expired. Please re-connect.');
+    }
 
     // Set up response
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
@@ -648,10 +663,7 @@ app.post('/api/infrastructure/provision', async (req: Request, res: Response, ne
     let dbPass: string | null = null;
     let _isNew = false;
 
-    // Initialize Admin Supabase Client Early
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY, {
-      auth: { autoRefreshToken: false, persistSession: false }
-    });
+    // Unified admin client session
 
     if (targetProject) {
       sendStep(`✅ Found existing project entry: ${targetProject.id}`);
@@ -869,19 +881,13 @@ app.post('/api/infrastructure/provision-engine', async (req: Request, res: Respo
 
   try {
     const { userId } = SyncDatabaseSchema.parse(req.body);
+    let { accessToken } = req.body;
     const supabase = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY);
-
-    sendStep('🧬 Calibrating Native Neural Kernels...');
-    const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', userId)
-      .single();
-
+    const { data: user, error: userError } = await supabase.from('users').select('*').eq('id', userId).single();
     if (userError || !user) throw new Error('User not found.');
-    if (!user.supabase_project_id || !user.supabase_access_token) {
-      throw new Error('Supabase project not connected.');
-    }
+
+    if (!accessToken) accessToken = user.supabase_access_token;
+    if (!accessToken) throw new Error('Supabase project not connected or authorization expired.');
 
     sendStep('⚡ Establishing MCP Bridge Connection...');
     const mcpSessionId = await initializeSupabaseMCP(user.supabase_project_id, user.supabase_access_token);
