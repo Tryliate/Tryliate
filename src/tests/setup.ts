@@ -19,23 +19,29 @@ global.ResizeObserver = class ResizeObserver {
 };
 
 // Mock Supabase
-vi.mock('../lib/supabase', () => ({
-  supabase: {
-    auth: {
-      getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
-      onAuthStateChange: vi.fn().mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }),
-    },
-    from: vi.fn().mockReturnThis(),
-    select: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    single: vi.fn().mockResolvedValue({ data: null, error: null }),
-    upsert: vi.fn().mockResolvedValue({ data: null, error: null }),
+const mockSupabase = {
+  auth: {
+    getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
+    onAuthStateChange: vi.fn().mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }),
   },
-  getBYOIClient: vi.fn(() => ({
-    from: vi.fn().mockReturnThis(),
-    select: vi.fn().mockReturnThis(),
-    upsert: vi.fn().mockResolvedValue({ data: null, error: null }),
-  })),
+  from: vi.fn().mockReturnThis(),
+  select: vi.fn().mockReturnThis(),
+  eq: vi.fn().mockReturnThis(),
+  order: vi.fn().mockReturnThis(),
+  update: vi.fn().mockReturnThis(),
+  upsert: vi.fn().mockResolvedValue({ data: null, error: null }),
+  single: vi.fn().mockResolvedValue({ data: null, error: null }),
+  channel: vi.fn().mockReturnThis(),
+  on: vi.fn().mockReturnThis(),
+  subscribe: vi.fn().mockReturnThis(),
+  removeChannel: vi.fn().mockReturnThis(),
+  // Add then to make it thenable
+  then: (onFullfilled: any) => Promise.resolve({ data: [], error: null }).then(onFullfilled),
+};
+
+vi.mock('../lib/supabase', () => ({
+  supabase: mockSupabase,
+  getBYOIClient: vi.fn(() => mockSupabase),
 }));
 
 // Mock AI actions
