@@ -42,8 +42,8 @@ jobs:
       - name: Production Smoke Test
         run: bun run smoke-test
         env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ fromJson(toJson(secrets)).NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ fromJson(toJson(secrets)).NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
 
   deploy:
     name: Deploy to Google Cloud
@@ -62,7 +62,7 @@ jobs:
       - name: "Google Auth"
         uses: "google-github-actions/auth@v2"
         with:
-          credentials_json: ${{ fromJson(toJson(secrets)).GCP_SA_KEY }}
+          credentials_json: "${{ secrets.GCP_SA_KEY }}"
           project_id: "${{ env.GCP_PROJECT_ID }}"
 
       - name: "Set up Cloud SDK"
