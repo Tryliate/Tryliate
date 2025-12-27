@@ -75,20 +75,25 @@ export async function GET(request: Request) {
         return renderError('Neural Handshake Error', 'Missing user identity in state data.', { state: decodedState });
       }
 
-      // 2. Token Exchange (Management API)
-      const CLIENT_ID = process.env.SUPABASE_OAUTH_CLIENT_ID || process.env.NEXT_PUBLIC_SUPABASE_OAUTH_CLIENT_ID;
-      const CLIENT_SECRET = process.env.SUPABASE_OAUTH_CLIENT_SECRET;
+      // 2. Token Exchange (Management API) - SECURE SERVER-SIDE ONLY
+      const CLIENT_ID = process.env.NEXT_PUBLIC_SUPABASE_OAUTH_CLIENT_ID || process.env.SUPABASE_OAUTH_CLIENT_ID;
+      const CLIENT_SECRET = process.env.SUPABASE_OAUTH_CLIENT_SECRET; // No NEXT_PUBLIC here for safety
 
       if (!CLIENT_ID || !CLIENT_SECRET) {
-        console.error('❌ Missing OAuth Credentials:', { hasClientId: !!CLIENT_ID, hasClientSecret: !!CLIENT_SECRET });
+        console.error('❌ Missing OAuth Credentials:', {
+          hasClientId: !!CLIENT_ID,
+          hasClientSecret: !!CLIENT_SECRET,
+          checked: ['SUPABASE_OAUTH_CLIENT_ID', 'NEXT_PUBLIC_SUPABASE_OAUTH_CLIENT_ID', 'SUPABASE_OAUTH_CLIENT_SECRET']
+        });
         return renderError('Configuration Error', 'Platform environment not calibrated.', {
           error: 'Missing OAuth Credentials',
-          hint: 'Ensure SUPABASE_OAUTH_CLIENT_ID and SUPABASE_OAUTH_CLIENT_SECRET are set in Cloud Run.'
+          hint: 'Ensure your Supabase OAuth Client ID and Secret are set in Cloud Run Secrets.'
         });
       }
 
       console.log('📡 Exchanging code for Management Token...');
 
+      // Ensure the redirect URI exactly matches what was configured in Supabase
       const redirectUri = `${origin}/auth/callback/supabase`;
       console.log('🔗 Using Redirect URI:', redirectUri);
 
@@ -96,7 +101,7 @@ export async function GET(request: Request) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
-          'Authorization': `Basic ${Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString('base64')}`,
+          'Authorization': `Basic ${Buffer.from(`${CLIENT_ID.trim()}:${CLIENT_SECRET.trim()}`).toString('base64')}`,
         },
         body: new URLSearchParams({
           grant_type: 'authorization_code',
@@ -111,7 +116,8 @@ export async function GET(request: Request) {
         console.error('❌ Supabase Token API Error:', tokenData);
         return renderError('Authorization Failed', 'Could not exchange code for token.', {
           supbase_error: tokenData,
-          used_redirect_uri: redirectUri
+          used_redirect_uri: redirectUri,
+          id_used: CLIENT_ID.substring(0, 5) + '...'
         });
       }
 
