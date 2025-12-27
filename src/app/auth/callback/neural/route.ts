@@ -50,7 +50,15 @@ export async function GET(request: Request) {
     const verifier = cookieStore.get('mcp_code_verifier')?.value;
     if (!verifier) throw new Error('Security Verifier expired. Please try again.');
 
-    console.log(`🔄 Exchanging code for tokens on ${userData.supabase_url}...`);
+    // --- Origin Detection Logic ---
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '');
+    const host = request.headers.get('x-forwarded-host') || request.headers.get('host');
+    const proto = request.headers.get('x-forwarded-proto') || 'https';
+    let origin = (host) ? `${proto}://${host}` : (siteUrl || url.origin);
+    origin = origin.replace(/\/$/, '');
+    const redirectUri = `${origin}/auth/callback/neural`;
+
+    console.log(`🔄 Exchanging code for tokens on ${userData.supabase_url}...`, { origin, redirectUri });
 
     // Manual exchange because we are targeting the user's project, not Tryliate's
     const tokenResponse = await fetch(`${userData.supabase_url}/auth/v1/token?grant_type=pkce`, {
@@ -64,7 +72,7 @@ export async function GET(request: Request) {
         client_secret: process.env.SUPABASE_OAUTH_CLIENT_SECRET,
         code,
         code_verifier: verifier,
-        redirect_uri: `https://frontend-374665986758.us-central1.run.app//auth/callback/neural`
+        redirect_uri: redirectUri
       })
     });
 

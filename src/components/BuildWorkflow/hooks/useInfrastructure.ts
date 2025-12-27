@@ -51,7 +51,7 @@ export function useInfrastructure(
     try {
       // Backend handles token retrieval from the Administrative Vault
 
-      const backendUrl = process.env.NEXT_PUBLIC_CLOUD_RUN_URL || 'https://tryliate-backend-374665986758.us-east1.run.app';
+      const backendUrl = process.env.NEXT_PUBLIC_ENGINE_URL || process.env.NEXT_PUBLIC_CLOUD_RUN_URL || 'https://tryliate-backend-374665986758.us-east1.run.app';
       const response = await fetch(`${backendUrl}/api/infrastructure/provision?t=${Date.now()}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

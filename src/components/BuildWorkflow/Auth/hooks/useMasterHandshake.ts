@@ -37,7 +37,8 @@ export function useMasterHandshake(user: any, supabaseProjectId: string | null, 
       document.cookie = `mcp_code_verifier=${codeVerifier}; Path=/; SameSite=Lax; Max-Age=3600${window.location.protocol === 'https:' ? '; Secure' : ''}`;
       const userProjectUrl = `https://${supabaseProjectId}.supabase.co`;
       const clientId = process.env.NEXT_PUBLIC_SUPABASE_OAUTH_CLIENT_ID || '4e250574-7502-48b4-bae3-d986ef752048';
-      const redirectUri = 'https://frontend-374665986758.us-central1.run.app//auth/callback/neural';
+      const baseOrigin = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') || window.location.origin;
+      const redirectUri = `${baseOrigin}/auth/callback/neural`;
       const state = btoa(JSON.stringify({ userId: user.id, r: Math.random() })).substring(0, 32);
       setMasterHandshakeStatus('redirecting');
       const authUrl = `${userProjectUrl}/auth/v1/oauth/authorize?client_id=${clientId}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&scope=openid+email+profile&code_challenge=${codeChallenge}&code_challenge_method=S256&state=${state}`;

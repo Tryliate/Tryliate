@@ -33,7 +33,7 @@ export const AWESOME_MCP_CATEGORIES = [
 export const AWESOME_MCP_SERVERS = [];
 
 // Backend Proxy Configuration (Unified Official Registry)
-const BACKEND_URL = 'https://tryliate-registry-374665986758.us-central1.run.app';
+const BACKEND_URL = process.env.NEXT_PUBLIC_REGISTRY_URL || 'https://tryliate-registry-374665986758.us-central1.run.app';
 
 // Unified Official API (Neon Hub Backed)
 export const fetchMCPRegistry = async (variant: 'Servers' | 'Tools' | 'Clients' = 'Servers') => {
