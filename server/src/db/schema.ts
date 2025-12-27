@@ -160,6 +160,25 @@ export const userSettings = pgTable('user_settings', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
 
+
+export const storageBuckets = pgTable('storage_buckets', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(),
+  userId: uuid('user_id'),
+  accessLevel: text('access_level').default('private'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export const storageFiles = pgTable('storage_files', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  bucketId: uuid('bucket_id').references(() => storageBuckets.id, { onDelete: 'cascade' }),
+  fileName: text('file_name').notNull(),
+  contentType: text('content_type'),
+  size: integer('size'),
+  metadata: jsonb('metadata').default({}),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
 export const flowFeed = pgTable('flow_feed', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name'),

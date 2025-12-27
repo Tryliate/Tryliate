@@ -12,6 +12,7 @@ import engineRouter from './routes/engine';
 import mcpRouter from './routes/mcp';
 import neuralRouter from './routes/neural';
 import debugRouter from './routes/debug';
+import storageRouter from './routes/storage';
 
 // Services
 import { startNeuralPollers } from './services/poller';
@@ -54,6 +55,7 @@ app.use('/api/infrastructure', engineRouter); // Shared prefix
 app.use('/api/engine', engineRouter);
 app.use('/api/mcp', mcpRouter);
 app.use('/api/neural', neuralRouter);
+app.use('/api/storage', storageRouter);
 
 // --- GLOBAL ERROR HANDLER ---
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

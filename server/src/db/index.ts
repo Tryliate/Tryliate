@@ -1,4 +1,5 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
+export { eq, ilike, desc } from 'drizzle-orm';
 import pkg from 'pg';
 const { Pool } = pkg;
 import * as schema from './schema';
