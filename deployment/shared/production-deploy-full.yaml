@@ -81,7 +81,7 @@ steps:
     args:
       - "-c"
       - |
-        sed -i "s|image: .*|image: us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/frontend:$_VERSION|g" deployment/frontend/run-service.yaml
+        sed -i "s#image: .*#image: us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/frontend:$_VERSION#g" deployment/frontend/run-service.yaml
         gcloud run services replace deployment/frontend/run-service.yaml --region us-central1
 
   # ==========================================
@@ -93,7 +93,7 @@ steps:
     args:
       - "-c"
       - |
-        sed -i "s|image: .*|image: us-east1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/tryliate-backend:$_VERSION|g" deployment/backend/run-service.yaml
+        sed -i "s#image: .*#image: us-east1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/tryliate-backend:$_VERSION#g" deployment/backend/run-service.yaml
         gcloud run services replace deployment/backend/run-service.yaml --region us-east1
 
 images:
