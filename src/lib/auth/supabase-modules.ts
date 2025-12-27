@@ -34,6 +34,7 @@ export async function exchangeCodeForToken(
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
       'Authorization': `Basic ${Buffer.from(`${CLIENT_ID.trim()}:${CLIENT_SECRET.trim()}`).toString('base64')}`,
+      'Accept': 'application/json',
     },
     body: new URLSearchParams({
       grant_type: 'authorization_code',
@@ -42,11 +43,18 @@ export async function exchangeCodeForToken(
     }),
   });
 
-  const data = await response.json();
+  const responseText = await response.text();
+  let data: any;
+  try {
+    data = JSON.parse(responseText);
+  } catch (e) {
+    console.error('❌ Supabase returned non-JSON response:', responseText);
+    throw new Error(`Supabase OAuth error: ${response.status} ${response.statusText}`);
+  }
 
   if (!response.ok || data.error) {
     console.error('❌ Token Exchange Failed:', data);
-    throw new Error(data.error_description || data.message || 'Supabase Token Exchange Failed');
+    throw new Error(data.error_description || data.message || `Token exchange failed with status ${response.status}`);
   }
 
   return data as SupabaseTokenResponse;
@@ -84,8 +92,9 @@ export async function enrichUserProjectData(accessToken: string): Promise<Enrich
 
       if (keysRes.ok) {
         const keys = await keysRes.json();
-        publishableKey = keys.find((k: any) => k.name === 'anon')?.api_key || '';
-        secretKey = keys.find((k: any) => k.name === 'service_role')?.api_key || '';
+        // Strict mapping: anon -> publishable, service_role -> secret
+        publishableKey = keys.find((k: any) => k.name === 'anon' || k.name === 'publishable')?.api_key || '';
+        secretKey = keys.find((k: any) => k.name === 'service_role' || k.name === 'secret')?.api_key || '';
       }
     }
   } catch (err: any) {
@@ -102,16 +111,17 @@ export async function syncUserToVault(
   projectData: EnrichedProjectData
 ): Promise<void> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
+  // STRICT CHANGE: Use ONLY SUPABASE_SECRET_KEY
+  const secretKey = process.env.SUPABASE_SECRET_KEY;
 
-  if (!supabaseUrl || !serviceRoleKey) {
-    console.error('❌ Server Config Error: Missing Admin Supabase Credentials.');
+  if (!supabaseUrl || !secretKey) {
+    console.error('❌ Server Config Error: Missing Admin Supabase Credentials (SUPABASE_SECRET_KEY).');
     // We do NOT throw here to avoid blocking login if admin sync fails, 
     // but in a strict system we might want to. For now, we log error.
     return;
   }
 
-  const adminClient = createClient(supabaseUrl, serviceRoleKey, {
+  const adminClient = createClient(supabaseUrl, secretKey, {
     auth: { autoRefreshToken: false, persistSession: false }
   });
 

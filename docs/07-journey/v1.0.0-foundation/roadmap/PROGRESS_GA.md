@@ -305,7 +305,7 @@ CREATE TABLE IF NOT EXISTS public.users (
   email TEXT UNIQUE NOT NULL,
   supabase_project_id TEXT,
   supabase_org_id TEXT,
-  supabase_service_role_key TEXT,
+  supabase_secret_key TEXT,
   supabase_db_pass TEXT,
   supabase_access_token TEXT,
   supabase_connected BOOLEAN DEFAULT false,
@@ -503,14 +503,14 @@ users (id, email, supabase_project_id, tryliate_initialized, ...)
 #### **Security Concerns: 🔴 HIGH**
 
 **CRITICAL:** Secrets are hardcoded in `cloudbuild.frontend.yaml` and `cloudbuild.backend.yaml`:
-- Supabase service role key (line 41 in frontend config)
+- Supabase secret key (line 41 in frontend config)
 - Groq API key
 - Google OAuth credentials
 - Redis URL
 
 **Recommendation:** Use Google Secret Manager:
 ```yaml
---set-secrets=SUPABASE_SERVICE_ROLE_KEY=supabase-key:latest
+--set-secrets=SUPABASE_SECRET_KEY=supabase-key:latest
 ```
 
 ---

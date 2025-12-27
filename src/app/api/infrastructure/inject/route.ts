@@ -15,25 +15,25 @@ export async function POST(request: Request) {
     }
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const serviceRoleKey = process.env.SUPABASE_SECRET_KEY;
-    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
+    const secretKey = process.env.SUPABASE_SECRET_KEY;
+    const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
 
     let platformSupabase;
-    if (serviceRoleKey) {
-      platformSupabase = createClient(supabaseUrl, serviceRoleKey);
+    if (secretKey) {
+      platformSupabase = createClient(supabaseUrl, secretKey);
     } else {
       if (!authHeader) {
         return NextResponse.json({ error: 'Missing Neural Token for RLS.' }, { status: 401 });
       }
       const token = authHeader.replace('Bearer ', '');
-      platformSupabase = createClient(supabaseUrl, anonKey, {
+      platformSupabase = createClient(supabaseUrl, publishableKey, {
         global: { headers: { Authorization: `Bearer ${token}` } }
       });
     }
 
     const { data: user, error: fetchError } = await platformSupabase
       .from('users')
-      .select('supabase_project_id, supabase_service_role_key, supabase_access_token, supabase_db_pass')
+      .select('supabase_project_id, supabase_secret_key, supabase_access_token, supabase_db_pass')
       .eq('id', userId)
       .single();
 

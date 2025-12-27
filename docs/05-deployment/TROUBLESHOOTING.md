@@ -14,7 +14,7 @@ Common issues and solutions for the Tryliate Platform.
 
 ### ❌ Issue: "Supabase Client NOT Initialized"
 **Symptoms:** Warning in logs: `⚠️ Supabase Client NOT Initialized`.
-- **Solution:** Verify `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are set correctly in your `.env.local`.
+- **Solution:** Verify `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` are set correctly in your `.env.local`.
 
 ---
 

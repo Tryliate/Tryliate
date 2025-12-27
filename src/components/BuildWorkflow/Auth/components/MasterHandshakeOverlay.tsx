@@ -66,10 +66,10 @@ export const MasterHandshakeOverlay: React.FC<MasterHandshakeOverlayProps> = ({
               <ShieldCheck size={24} color="#000" strokeWidth={2.5} />
             </div>
             <h2 style={{ color: '#fff', fontSize: '24px', fontWeight: 900, letterSpacing: '-0.04em', margin: '4px 0 0 0', textTransform: 'uppercase' }}>
-              Master Handshake
+              Secret Handshake
             </h2>
             <p style={{ color: '#444', fontSize: '11px', fontWeight: 700, margin: 0, lineHeight: 1.5, maxWidth: '280px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              PROVISION OAUTH 2.1 CREDENTIALS ACROSS THE ENTIRE NEURAL FABRIC (RFC 9728)
+              STABILIZE NEURAL CREDENTIALS AND SYNC PRIVATE KEYS (RFC 9728)
             </p>
           </div>
           <button
@@ -98,7 +98,7 @@ export const MasterHandshakeOverlay: React.FC<MasterHandshakeOverlayProps> = ({
           <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid #111', borderRadius: '20px', padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
               <span style={{ fontSize: '9px', fontWeight: 900, color: '#333', textTransform: 'uppercase' }}>Discovery Path</span>
-              <span style={{ fontSize: '9px', fontWeight: 900, color: '#fff' }}>/.well-known/oauth-prm</span>
+              <span style={{ fontSize: '9px', fontWeight: 900, color: '#fff' }}>/.well-known/neural-prm</span>
             </div>
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
               <div style={{ flex: 1, height: '2px', background: '#111', position: 'relative' }}>
@@ -112,15 +112,15 @@ export const MasterHandshakeOverlay: React.FC<MasterHandshakeOverlayProps> = ({
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
               <div style={{ color: '#fff', opacity: 0.8 }}><ShieldCheck size={18} /></div>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ color: '#fff', fontSize: '12px', fontWeight: 800 }}>OAuth 2.1 PKCE Force</span>
-                <span style={{ color: '#444', fontSize: '9px', fontWeight: 600 }}>S256 CHALLENGE ACTIVE</span>
+                <span style={{ color: '#fff', fontSize: '12px', fontWeight: 800 }}>Neural Secret Force</span>
+                <span style={{ color: '#444', fontSize: '9px', fontWeight: 600 }}>PRIVATE_KEY_PROTOCOL_ACTIVE</span>
               </div>
             </div>
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginTop: '4px' }}>
               <div style={{ color: '#fff', opacity: 0.8 }}><Globe size={18} /></div>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ color: '#fff', fontSize: '12px', fontWeight: 800 }}>CIMD Dynamic Registry</span>
-                <span style={{ color: '#444', fontSize: '9px', fontWeight: 600 }}>RFC 7591 COMPLIANT</span>
+                <span style={{ color: '#fff', fontSize: '12px', fontWeight: 800 }}>Publishable Dynamic Registry</span>
+                <span style={{ color: '#444', fontSize: '9px', fontWeight: 600 }}>GLOBAL_IDENTITY_SYNC</span>
               </div>
             </div>
           </div>
@@ -161,10 +161,10 @@ export const MasterHandshakeOverlay: React.FC<MasterHandshakeOverlayProps> = ({
               e.currentTarget.style.transform = 'scale(1)';
             }}
           >
-            {status === 'generating' && 'Generating Keys...'}
+            {status === 'generating' && 'Generating Neural Keys...'}
             {status === 'redirecting' && 'Redirecting...'}
             {status === 'error' && 'Protocol Error'}
-            {status === 'idle' && <>AUTHORIZE ONE-CLICK <ArrowRight size={18} strokeWidth={3} /></>}
+            {status === 'idle' && <>SYNC SECRET KEY <ArrowRight size={18} strokeWidth={3} /></>}
           </button>
           <p style={{ color: '#333', fontSize: '9px', textAlign: 'center', marginTop: '20px', textTransform: 'uppercase', letterSpacing: '0.15em', fontWeight: 900 }}>
             Unified MCP Handshake Protocol • Tryliate v1.2

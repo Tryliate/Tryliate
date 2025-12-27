@@ -152,13 +152,13 @@ The main platform now acts purely as a **Connector** and **Marketplace**. The "B
 4. **Move Secrets to Google Secret Manager**
    ```bash
    # Create secrets
-   echo -n "your-service-role-key" | gcloud secrets create supabase-key --data-file=-
+   echo -n "your-secret-key" | gcloud secrets create supabase-key --data-file=-
    echo -n "your-groq-api-key" | gcloud secrets create groq-key --data-file=-
    
    # Update Cloud Run deployment
    gcloud run services update frontend \
      --region=us-central1 \
-     --set-secrets=SUPABASE_SERVICE_ROLE_KEY=supabase-key:latest,GROQ_API_KEY=groq-key:latest
+     --set-secrets=SUPABASE_SECRET_KEY=supabase-key:latest,GROQ_API_KEY=groq-key:latest
    ```
 
 5. **Remove Hardcoded Secrets**

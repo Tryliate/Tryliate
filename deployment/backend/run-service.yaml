@@ -32,7 +32,7 @@ spec:
             - name: SUPABASE_SECRET_KEY
               valueFrom:
                 secretKeyRef:
-                  name: supabase-service-role-key
+                  name: supabase-secret-key
                   key: latest
             - name: GROQ_API_KEY
               valueFrom:

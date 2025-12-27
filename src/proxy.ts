@@ -16,7 +16,7 @@ export async function proxy(request: NextRequest) {
   try {
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://edtfhsblomgamobizkbo.supabase.co',
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_gLjIL2U66iJo18ce3HHHDg_twGAg078',
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_gLjIL2U66iJo18ce3HHHDg_twGAg078',
       {
         cookies: {
           get(name: string) {

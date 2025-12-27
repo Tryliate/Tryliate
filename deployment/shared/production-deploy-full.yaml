@@ -14,7 +14,7 @@ steps:
       - "--build-arg"
       - "NEXT_PUBLIC_SUPABASE_URL=https://edtfhsblomgamobizkbo.supabase.co"
       - "--build-arg"
-      - "NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_gLjIL2U66iJo18ce3HHHDg_twGAg078"
+      - "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_gLjIL2U66iJo18ce3HHHDg_twGAg078"
       - "--build-arg"
       - "NEXT_PUBLIC_CLOUD_RUN_URL=https://tryliate-backend-374665986758.us-east1.run.app"
       - "--build-arg"

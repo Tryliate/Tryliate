@@ -88,7 +88,7 @@ Registry of available MCP servers and tools.
 
 ## 🛡️ Security Policies (RLS)
 
-All tables implement **Row-Level Security** to ensure data isolation. The `tryliate` schema is created with strict RLS policies allowing the infrastructure owner (authenticated via Service Role or User ID) to manage job state while preventing cross-user leakage.
+All tables implement **Row-Level Security** to ensure data isolation. The `tryliate` schema is created with strict RLS policies allowing the infrastructure owner (authenticated via Secret Key or User ID) to manage job state while preventing cross-user leakage.
 
 ---
 

@@ -455,7 +455,7 @@ User profiles with BYOI credentials.
 
 1. ✅ **Row-Level Security (RLS)** on all tables
 2. ✅ **JWT-based authentication** via Supabase
-3. ✅ **Service Role Key** for admin operations
+3. ✅ **Secret Key** for admin operations
 4. ✅ **CORS protection** on backend
 5. ✅ **Environment variable encryption** via Google Secret Manager
 6. ✅ **HTTPS-only** communication
@@ -607,8 +607,8 @@ cbad75c - UI: Evolved Add-on cluster with Neural Analytics
 ```env
 # Supabase (Admin Instance)
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_ANON_KEY
-SUPABASE_SERVICE_ROLE_KEY=YOUR_SERVICE_ROLE_KEY
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=YOUR_PUBLISHABLE_KEY
+SUPABASE_SECRET_KEY=YOUR_SECRET_KEY
 
 # Backend URLs
 NEXT_PUBLIC_CLOUD_RUN_URL=https://tryliate-backend-374665986758.us-east1.run.app

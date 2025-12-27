@@ -42,7 +42,7 @@ export const SmartConnectOverlay: React.FC<SmartConnectOverlayProps> = ({ isOpen
         }}
         onClick={e => e.stopPropagation()}
       >
-        {/* Header */}
+        // Header
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{
@@ -64,10 +64,10 @@ export const SmartConnectOverlay: React.FC<SmartConnectOverlayProps> = ({ isOpen
               />
             </div>
             <h2 style={{ color: '#fff', fontSize: '24px', fontWeight: 900, letterSpacing: '-0.04em', margin: '4px 0 0 0', textTransform: 'uppercase' }}>
-              Supabase Smart Connect
+              Supabase Link
             </h2>
             <p style={{ color: '#666', fontSize: '11px', fontWeight: 800, margin: 0, lineHeight: 1.5, maxWidth: '320px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              PROVISIONING NEURAL INFRASTRUCTURE WITH INFINITE SCALABILITY AND REALTIME SYNC.
+              SECURELY HANDSHAKE WITH YOUR PRIVATE INFRASTRUCTURE USING PUBLISHABLE AND SECRET KEYS.
             </p>
           </div>
           <button
@@ -102,9 +102,9 @@ export const SmartConnectOverlay: React.FC<SmartConnectOverlayProps> = ({ isOpen
         {/* Benefits/Details */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {[
-            { icon: <Database size={16} />, title: 'BYOI Isolation', desc: 'Private 21-Table Neural Architecture' },
-            { icon: <Zap size={16} />, title: 'Realtime Neural Sync', desc: 'Live state propagation across fabric' },
-            { icon: <BadgeCheck size={16} />, title: 'Automated RLS Enforcer', desc: 'Military-grade row-level security' },
+            { icon: <Database size={16} />, title: 'BYOI Isolation', desc: 'Secure Secret Key Management' },
+            { icon: <Zap size={16} />, title: 'Realtime Neural Sync', desc: 'Encrypted Publishable Handshake' },
+            { icon: <BadgeCheck size={16} />, title: 'Automated RLS Enforcer', desc: 'Identity-first Protocol' },
           ].map((item, i) => (
             <div key={i} style={{ display: 'flex', gap: '14px', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '12px 16px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.03)' }}>
               <div style={{ color: '#fff' }}>{item.icon}</div>
@@ -149,7 +149,7 @@ export const SmartConnectOverlay: React.FC<SmartConnectOverlayProps> = ({ isOpen
               e.currentTarget.style.transform = 'scale(1)';
             }}
           >
-            ONE-CLICK AUTH <ArrowRight size={18} strokeWidth={3} />
+            AUTHORIZE PROTOCOL <ArrowRight size={18} strokeWidth={3} />
           </button>
           <p style={{ color: '#222', fontSize: '9px', textAlign: 'center', marginTop: '20px', textTransform: 'uppercase', letterSpacing: '0.15em', fontWeight: 900 }}>
             Official Supabase Smart Bridge • Tryliate Engine v1.2

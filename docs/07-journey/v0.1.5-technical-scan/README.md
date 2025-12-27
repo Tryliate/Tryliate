@@ -519,7 +519,7 @@ CREATE TABLE public.users (
   email TEXT UNIQUE NOT NULL,
   supabase_project_id TEXT,
   supabase_org_id TEXT,
-  supabase_service_role_key TEXT,
+  supabase_secret_key TEXT,
   supabase_db_pass TEXT,
   supabase_access_token TEXT,
   supabase_connected BOOLEAN DEFAULT false,
@@ -632,7 +632,7 @@ FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 ARG NEXT_PUBLIC_SUPABASE_URL
-ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+ARG NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 # ... (6 build args total)
 RUN bun run build
 
@@ -646,7 +646,7 @@ CMD ["bun", "server.js"]
 
 **Build Args:**
 - `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 - `NEXT_PUBLIC_CLOUD_RUN_URL`
 - `NEXT_PUBLIC_ENGINE_URL`
 - `NEXT_PUBLIC_LOGO_DEV_PUBLISHABLE_KEY`
@@ -754,7 +754,7 @@ CREATE TABLE public.users (...);
 **Solution:**
 ```yaml
 # Use Google Secret Manager
---set-secrets=SUPABASE_SERVICE_ROLE_KEY=supabase-key:latest,GROQ_API_KEY=groq-key:latest
+--set-secrets=SUPABASE_SECRET_KEY=supabase-key:latest,GROQ_API_KEY=groq-key:latest
 ```
 
 **Estimated Fix Time:** 2 hours

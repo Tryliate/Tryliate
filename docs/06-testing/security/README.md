@@ -6,7 +6,7 @@ Ensures the platform adheres to "Military Grade" security standards, specificall
 ## Architecture: Layer 6 Protection
 *   **Proxy**: Intercepts every request to verify authentication before allowing access to the `/build` workspace.
 *   **HTTP Hardening**: Injects headers like `X-Frame-Options: DENY` and strict `CSP` to prevent clickjacking and XSS.
-*   **Identity Isolation**: Hooks are configured to NEVER expose the `service_role_key` to the global UI state.
+*   **Identity Isolation**: Hooks are configured to NEVER expose the `secret_key` to the global UI state.
 
 ## Key Test Cases (`security.cy.ts`)
 *   **Unauthorized Redirects**: Confirms that non-logged-in users are kicked to `/login`.

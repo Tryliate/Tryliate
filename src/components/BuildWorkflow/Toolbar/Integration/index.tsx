@@ -6,6 +6,7 @@ import { SupabaseSection } from './SupabaseSection';
 import { EngineSection } from './EngineSection';
 import { ProvisioningSection } from './ProvisioningSection';
 import { GuardianSection } from './GuardianSection';
+import { AuthManager } from '../../Auth/components/AuthManager';
 
 interface IntegrationProps {
   isOpen: boolean;
@@ -84,96 +85,28 @@ export const Integration: React.FC<IntegrationProps> = ({
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <SupabaseSection
+            <AuthManager
               isSupabaseConnected={isSupabaseConnected}
-              onToggleConnection={onToggleConnection}
-            />
-
-            <div style={{ paddingLeft: '4px', fontSize: '9px', color: '#222', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: '4px' }}>
-              Add-ons & Protocols
-            </div>
-
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              background: 'rgba(255,255,255,0.02)',
-              padding: '8px 10px',
-              borderRadius: '16px',
-              border: '1px solid #111'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div style={{ width: '28px', height: '28px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Shield size={14} color="#fff" />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ color: '#fff', fontSize: '12px', fontWeight: 800 }}>Neural Auth</span>
-                    {isNeuralAuthActive && (
-                      <span style={{
-                        fontSize: '7px',
-                        fontWeight: 950,
-                        padding: '1.5px 5px',
-                        background: 'rgba(255,255,255,0.05)',
-                        color: '#fff',
-                        borderRadius: '4px',
-                        border: '1px solid #1a1a1a',
-                        letterSpacing: '0.05em'
-                      }}>
-                        ACTIVE
-                      </span>
-                    )}
-                  </div>
-                  <span style={{ color: '#444', fontSize: '7px', fontWeight: 800, textTransform: 'uppercase' }}>PKCE READY</span>
-                </div>
-              </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onOpenOneClickAuth?.();
-                }}
-                style={{
-                  background: isNeuralAuthActive
-                    ? 'rgba(255, 255, 255, 0.05)'
-                    : '#fff',
-                  color: isNeuralAuthActive
-                    ? '#fff'
-                    : '#000',
-                  border: isNeuralAuthActive
-                    ? '1px solid rgba(255, 255, 255, 0.2)'
-                    : 'none',
-                  padding: '4px 10px',
-                  borderRadius: '12px',
-                  fontSize: '9px',
-                  fontWeight: 900,
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                  backdropFilter: isNeuralAuthActive ? 'blur(10px)' : 'none'
-                }}
-              >
-                {isNeuralAuthActive ? 'CONNECTED' : 'CONNECT'}
-              </button>
-            </div>
-
-            <EngineSection
-              isSupabaseConnected={isSupabaseConnected}
-              isActive={isEngineConnected}
-              onToggle={onProvisionEngine}
-              onOpenOneClickAuth={onOpenOneClickAuth}
-            />
-
-            <GuardianSection userId={typeof window !== 'undefined' ? (JSON.parse(localStorage.getItem('tryliate-auth') || '{}').user?.id) : null} />
-          </div>
-
-          {isSupabaseConnected && (
-            <ProvisioningSection
+              isNeuralAuthActive={isNeuralAuthActive}
               isConfigured={isConfigured}
-              isProvisioning={isProvisioning}
-              provisioningLogs={provisioningLogs}
+              onOpenSmartConnect={onToggleConnection}
+              onOpenMasterHandshake={() => onOpenOneClickAuth?.()}
               onProvision={onProvision}
               onReset={onReset}
             />
-          )}
+
+            {isSupabaseConnected && (isProvisioning || provisioningLogs.length > 0) && (
+              <ProvisioningSection
+                isConfigured={isConfigured}
+                isProvisioning={isProvisioning}
+                provisioningLogs={provisioningLogs}
+                onProvision={onProvision}
+                onReset={onReset}
+              />
+            )}
+
+            <GuardianSection userId={typeof window !== 'undefined' ? (JSON.parse(localStorage.getItem('tryliate-auth') || '{}').user?.id) : null} />
+          </div>
         </div>
       )}
       {noCapsule ? (

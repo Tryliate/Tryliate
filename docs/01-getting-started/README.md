@@ -54,8 +54,8 @@ Edit `.env.local` with your credentials:
 ```env
 # Supabase (Admin Instance)
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
+SUPABASE_SECRET_KEY=your-secret-key
 
 # Backend URLs (for local development)
 NEXT_PUBLIC_CLOUD_RUN_URL=http://localhost:8080
@@ -194,7 +194,7 @@ bun install
 **Issue: "Database connection failed"**
 ```bash
 # Solution: Check your Supabase credentials in .env.local
-# Ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are correct
+# Ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY are correct
 ```
 
 **Issue: "Port 3000 already in use"**

@@ -144,8 +144,8 @@
    ```env
    # Supabase (Admin Instance)
    NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-   SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
+   SUPABASE_SECRET_KEY=your-secret-key
 
    # Backend URLs
    NEXT_PUBLIC_CLOUD_RUN_URL=http://localhost:8080
@@ -218,8 +218,8 @@ gcloud run services update frontend \
 | Variable | Description | Required |
 |----------|-------------|----------|
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL | ✅ |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key | ✅ |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key | ✅ |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable key | ✅ |
+| `SUPABASE_SECRET_KEY` | Supabase secret key | ✅ |
 | `NEXT_PUBLIC_CLOUD_RUN_URL` | Backend API URL | ✅ |
 | `NEXT_PUBLIC_ENGINE_URL` | Inngest engine URL | ✅ |
 | `GROQ_API_KEY` | Groq AI API key | ✅ |

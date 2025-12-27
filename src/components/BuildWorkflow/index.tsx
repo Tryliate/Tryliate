@@ -18,18 +18,19 @@ import { MCPConfigModal } from './MCPConfigModal';
 import { AIPanel } from './AIPanel';
 import { nodeTypes } from './constants';
 import { Check } from 'lucide-react';
-import { SmartConnectOverlay } from './SmartConnectOverlay';
-import { MasterHandshakeOverlay } from './MasterHandshakeOverlay';
 import { WorkflowOverlay } from './WorkflowOverlay';
 import { EdgeConfigProvider, useEdgeConfig } from './EdgeConfigContext';
 
 // Hooks
 import { useWorkflowState } from './hooks/useWorkflowState';
-import { useAuthSync } from './hooks/useAuthSync';
+import { useAuthSync } from './Auth/hooks/useAuthSync';
 import { useInfrastructure } from './hooks/useInfrastructure';
 import { useRegistry } from './hooks/useRegistry';
-import { useMasterHandshake } from './hooks/useMasterHandshake';
+import { useMasterHandshake } from './Auth/hooks/useMasterHandshake';
 import { CustomEdge } from './CustomEdge';
+
+import { SmartConnectOverlay } from './Auth/components/SmartConnectOverlay';
+import { MasterHandshakeOverlay } from './Auth/components/MasterHandshakeOverlay';
 
 const edgeTypes = {
   'custom-edge': CustomEdge,
@@ -68,7 +69,7 @@ const BuildWorkflowInner = () => {
   } = useWorkflowState(screenToFlowPosition);
 
   const {
-    user, isSupabaseConnected, supabaseProjectId, isConfigured,
+    user, isSupabaseConnected, supabaseProjectId, isConfigured, isNeuralAuthActive: isNeuralAuthPersisted,
     retryTrigger, setRetryTrigger, setIsSupabaseConnected, setIsConfigured
   } = useAuthSync();
 
@@ -157,7 +158,7 @@ const BuildWorkflowInner = () => {
             if (isSupabaseConnected) {
               handleInfrastructureReset();
             } else {
-              setIsSmartConnectOpen(true);
+              handleAuthorize();
             }
           }}
           onOpenOverlay={(cat, sub) => setActiveOverlay({ category: cat, subType: sub })}
@@ -195,7 +196,7 @@ const BuildWorkflowInner = () => {
           onProvision={handleProvisionInfrastructure}
           onReset={handleInfrastructureReset}
           isNeuralAuthActive={isNeuralAuthActive}
-          onOpenOneClickAuth={() => setIsMasterHandshakeOpen(true)}
+          onOpenOneClickAuth={handleMasterAuth}
           runStatus={runStatus}
           executionLogs={executionLogs}
           isExecuting={isExecuting}
@@ -237,22 +238,6 @@ const BuildWorkflowInner = () => {
           )}
         </div>
       </div>
-
-      <SmartConnectOverlay
-        isOpen={isSmartConnectOpen}
-        onClose={() => setIsSmartConnectOpen(false)}
-        onAuthorize={() => {
-          setIsSmartConnectOpen(false);
-          handleAuthorize();
-        }}
-      />
-
-      <MasterHandshakeOverlay
-        isOpen={isMasterHandshakeOpen}
-        onClose={() => { setIsMasterHandshakeOpen(false); setMasterHandshakeStatus('idle'); }}
-        onAuthorize={handleMasterAuth}
-        status={masterHandshakeStatus}
-      />
 
       <NodePanel
         selectedNode={selectedNode}

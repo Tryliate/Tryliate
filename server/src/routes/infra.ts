@@ -160,7 +160,7 @@ router.post('/provision', async (req: Request, res: Response, next: NextFunction
     if (!keysRes.ok) throw new Error('Failed to fetch API keys.');
     const keys: any[] = await keysRes.json() as any[];
     const secretKey = keys.find(k => k.name === 'service_role' || k.name === 'secret')?.api_key;
-    const anonKey = keys.find(k => k.name === 'anon')?.api_key;
+    const publishableKey = keys.find(k => k.name === 'anon')?.api_key;
 
     if (!secretKey) throw new Error('Secret Key not discovered.');
 
@@ -169,7 +169,7 @@ router.post('/provision', async (req: Request, res: Response, next: NextFunction
       supabase_project_id: targetProject.id,
       supabase_org_id: targetProject.organization_id || '',
       supabase_url: `https://${targetProject.id}.supabase.co`,
-      supabase_publishable_key: anonKey,
+      supabase_publishable_key: publishableKey,
       supabase_secret_key: secretKey,
       tryliate_initialized: false
     }).eq('id', userId);
