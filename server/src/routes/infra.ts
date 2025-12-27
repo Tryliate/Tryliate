@@ -3,14 +3,15 @@ import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 import pkg from 'pg';
 const { Client } = pkg;
-import { db, pool } from '../db/index';
-import { users } from '../db/schema';
-import { eq } from 'drizzle-orm';
+// import { db, pool } from '../db/index';
+// import { users } from '../db/schema';
+// import { eq } from 'drizzle-orm';
 import { ProvisionSchema, ResetSchema, SyncDatabaseSchema, SyncSchema } from '../schemas';
 import { initializeSupabaseMCP, callSupabaseMCP } from '../services/supabase';
 import { BYOI_SCHEMA_SQL, NATIVE_ENGINE_SQL, splitSqlStatements } from '../utils/sql';
 import { trackExecution } from '../redis';
 import { PostgresQueueAdapter } from '../engine/native/adapters/postgres';
+
 
 const router: Router = Router();
 
@@ -35,7 +36,9 @@ router.post('/provision', async (req: Request, res: Response, next: NextFunction
     });
 
     if (!accessToken) {
-      console.log(`[PROVISION] Token missing in request for ${userId}. Probing Vaults...`);
+      // console.log(`[PROVISION] Token missing in request for ${userId}. Probing Vaults...`);
+      /* 
+      // Runtime Vault Probe removed as per strict Supabase-only policy
       try {
         const userRecords = await db.select().from(users).where(eq(users.id, userId)).limit(1);
         const vaultData = userRecords[0];
@@ -46,6 +49,7 @@ router.post('/provision', async (req: Request, res: Response, next: NextFunction
       } catch (vaultErr: any) {
         console.warn(`[PROVISION] Runtime Vault Probe failed: ${vaultErr.message}`);
       }
+      */
 
       if (!accessToken) {
         console.log(`[PROVISION] Probing Administrative Vault for ${userId}...`);
@@ -180,7 +184,7 @@ router.post('/provision', async (req: Request, res: Response, next: NextFunction
     }
 
     await supabase.from('users').update({ tryliate_initialized: true }).eq('id', userId);
-    await db.update(users).set({ tryliateInitialized: true, supabaseConnected: true, updatedAt: new Date() }).where(eq(users.id, userId));
+    // await db.update(users).set({ tryliateInitialized: true, supabaseConnected: true, updatedAt: new Date() }).where(eq(users.id, userId));
 
     sendStep('🎉 Infrastructure Ready!', 'success');
   } catch (error: any) {

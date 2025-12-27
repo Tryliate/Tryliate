@@ -190,8 +190,8 @@ export async function GET(request: Request) {
           supabase_access_token: accessToken,
           supabase_refresh_token: tokenData.refresh_token || null,
           supabase_project_id: projectRef,
-          supabase_anon_key: anonKey,
-          supabase_service_role_key: serviceRoleKey,
+          supabase_publishable_key: anonKey,
+          supabase_secret_key: serviceRoleKey,
           tryliate_initialized: !!projectRef, // If we found a project, consider it initialized
           updated_at: new Date().toISOString()
         }, { onConflict: 'id' });

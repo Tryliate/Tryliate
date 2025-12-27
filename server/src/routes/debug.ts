@@ -81,36 +81,7 @@ router.get('/schema-repair', async (req: Request, res: Response) => {
       message += 'Foundry: Created table foundry_nodes. ';
     }
 
-    const resUsers = await pool.query(`
-      SELECT column_name FROM information_schema.columns WHERE table_name = 'users'
-    `);
-    const userColumns = resUsers.rows.map((r: any) => r.column_name);
-    if (userColumns.length === 0) {
-      await pool.query(`
-        CREATE TABLE IF NOT EXISTS public.users (
-          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-          email TEXT UNIQUE,
-          supabase_project_id TEXT,
-          supabase_access_token TEXT,
-          supabase_db_pass TEXT,
-          supabase_org_id TEXT,
-          supabase_url TEXT,
-          tryliate_initialized BOOLEAN DEFAULT false,
-          supabase_connected BOOLEAN DEFAULT false,
-          created_at TIMESTAMPTZ DEFAULT now(),
-          updated_at TIMESTAMPTZ DEFAULT now()
-        );
-      `);
-      message += 'Master: Created users table. ';
-    } else {
-      const required = ['supabase_project_id', 'supabase_access_token', 'supabase_db_pass', 'supabase_connected', 'supabase_org_id', 'supabase_url'];
-      for (const col of required) {
-        if (!userColumns.includes(col)) {
-          await pool.query(`ALTER TABLE public.users ADD COLUMN IF NOT EXISTS ${col} TEXT`);
-          message += `Master: Added ${col}. `;
-        }
-      }
-    }
+
 
     res.json({ success: true, message: message || 'Schema is healthy.' });
   } catch (err: any) {

@@ -36,10 +36,17 @@ export function useAuthSync() {
           .from('users')
           .select('supabase_connected, supabase_org_id, supabase_project_id, tryliate_initialized')
           .eq('id', session.user.id)
-          .single();
+          .select('supabase_connected, supabase_org_id, supabase_project_id, tryliate_initialized')
+          .eq('id', session.user.id)
+          .maybeSingle();
 
         if (error) {
-          console.error('⚠️ [Security] Identity verification failed:', error.message);
+          console.error('⚠️ [Auth] Error fetching user profile:', error.message);
+          return;
+        }
+
+        if (!data) {
+          console.log('ℹ️ [Auth] User profile not found in public table. Waiting for initialization...');
           return;
         }
 
