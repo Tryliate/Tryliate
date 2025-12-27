@@ -95,7 +95,7 @@ export const Integration: React.FC<IntegrationProps> = ({
               onReset={onReset}
             />
 
-            {isSupabaseConnected && (isProvisioning || provisioningLogs.length > 0) && (
+            {isSupabaseConnected && (
               <ProvisioningSection
                 isConfigured={isConfigured}
                 isProvisioning={isProvisioning}

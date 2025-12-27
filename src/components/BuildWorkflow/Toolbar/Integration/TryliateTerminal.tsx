@@ -31,10 +31,10 @@ export const TryliateTerminal: React.FC<TryliateTerminalProps> = ({
     let type: TerminalLine['type'] = 'info';
     let text = log;
 
-    if (log.includes('❌') || log.toLowerCase().includes('error')) type = 'error';
-    else if (log.includes('✅') || log.includes('🎉')) type = 'success';
-    else if (log.includes('⚠️')) type = 'warning';
-    else if (log.includes('🚀') || log.includes('🏗️') || log.includes('📡')) type = 'process';
+    if (log.includes('❌') || log.toLowerCase().includes('error') || log.includes('[FAIL]')) type = 'error';
+    else if (log.includes('✅') || log.includes('🎉') || log.includes('[SYSTEM]') || log.includes('[DONE]') || log.includes('[AUTH]')) type = 'success';
+    else if (log.includes('⚠️') || log.includes('[GUARD]') || log.includes('[WARN]')) type = 'warning';
+    else if (log.includes('🚀') || log.includes('🏗️') || log.includes('📡') || log.includes('[INIT]') || log.includes('[PROTO]') || log.includes('[CORE]')) type = 'process';
 
     // Remove emojis for cleaner text if preferred, but user liked them
     return { text, type, timestamp };

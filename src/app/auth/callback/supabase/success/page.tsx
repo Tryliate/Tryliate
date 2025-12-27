@@ -6,7 +6,7 @@ export default function AuthSuccessPage() {
   useEffect(() => {
     // 1. Signal the opener (The main Tryliate Canvas)
     if (window.opener) {
-      window.opener.postMessage({ type: 'TRYLIATE_AUTH_SUCCESS' }, window.location.origin);
+      window.opener.postMessage({ type: 'TRYLIATE_AUTH_SUCCESS' }, '*');
     }
 
     // 2. Self-destruct sequence (Close the popup)

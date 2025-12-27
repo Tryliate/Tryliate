@@ -174,6 +174,7 @@ ALTER TABLE public.flow_space ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.workspace_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.foundry_nodes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.agent_memory ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.neural_discovery_queue ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.neural_links ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.tool_catalog ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_trail ENABLE ROW LEVEL SECURITY;
@@ -198,6 +199,8 @@ DROP POLICY IF EXISTS "Enable all for users" ON public.foundry_nodes;
 CREATE POLICY "Enable all for users" ON public.foundry_nodes FOR ALL USING (true);
 DROP POLICY IF EXISTS "Enable all for users" ON public.agent_memory;
 CREATE POLICY "Enable all for users" ON public.agent_memory FOR ALL USING (true);
+DROP POLICY IF EXISTS "Enable all for users" ON public.neural_discovery_queue;
+CREATE POLICY "Enable all for users" ON public.neural_discovery_queue FOR ALL USING (true);
 DROP POLICY IF EXISTS "Enable all for users" ON public.neural_links;
 CREATE POLICY "Enable all for users" ON public.neural_links FOR ALL USING (true);
 DROP POLICY IF EXISTS "Enable all for users" ON public.tool_catalog;
@@ -220,7 +223,8 @@ BEGIN
     'public.workflows', 'public.nodes', 'public.edges', 
     'public.mcp_registry', 'public.mcp_authorizations', 'public.flow_space', 
     'public.workspace_history', 'public.foundry_nodes', 'public.agent_memory', 
-    'public.neural_links', 'public.tool_catalog'
+    'public.neural_discovery_queue', 'public.neural_links', 'public.tool_catalog',
+    'public.audit_trail', 'public.user_settings'
   ] LOOP
     BEGIN
       EXECUTE format('ALTER PUBLICATION supabase_realtime ADD TABLE %s', t);
@@ -273,6 +277,18 @@ CREATE TABLE IF NOT EXISTS tryliate.steps (
   started_at TIMESTAMP WITH TIME ZONE,
   completed_at TIMESTAMP WITH TIME ZONE
 );
+
+-- Access Control for Neural Engine
+ALTER TABLE tryliate.jobs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tryliate.runs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tryliate.steps ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Enable all for users" ON tryliate.jobs;
+CREATE POLICY "Enable all for users" ON tryliate.jobs FOR ALL USING (true);
+DROP POLICY IF EXISTS "Enable all for users" ON tryliate.runs;
+CREATE POLICY "Enable all for users" ON tryliate.runs FOR ALL USING (true);
+DROP POLICY IF EXISTS "Enable all for users" ON tryliate.steps;
+CREATE POLICY "Enable all for users" ON tryliate.steps FOR ALL USING (true);
 
 -- Realtime Neural Engine Sync (Error Tolerant)
 DO $$

@@ -85,7 +85,7 @@ const BuildWorkflowInner = () => {
   const {
     masterHandshakeStatus, setMasterHandshakeStatus, isMasterHandshakeOpen, setIsMasterHandshakeOpen,
     isNeuralAuthActive, setIsNeuralAuthActive, handleMasterAuth
-  } = useMasterHandshake(user, supabaseProjectId, setNotification);
+  } = useMasterHandshake(user, supabaseProjectId, setNotification, isNeuralAuthPersisted);
 
   // 3. Derived State
   const graphContext = useMemo(() => JSON.stringify({ nodes, edges }), [nodes, edges]);
@@ -169,13 +169,13 @@ const BuildWorkflowInner = () => {
 
             // Step-by-step log simulation
             const logs = [
-              "🚀 Initializing Neural Core...",
-              "🧠 Processing Graph Context...",
-              "📡 Handshaking with MCP Servers...",
-              "✅ Authentication Verified.",
-              "🚀 Executing Workflow Nodes...",
-              "🧠 Aggregating Results...",
-              "✅ Neural Flow Complete."
+              "[CORE] Initializing Neural Core...",
+              "[BUS] Processing Graph Context...",
+              "[LINK] Handshaking with MCP Servers...",
+              "[AUTH] Authentication Verified.",
+              "[EXEC] Executing Workflow Nodes...",
+              "[SYNC] Aggregating Results...",
+              "[DONE] Neural Flow Complete."
             ];
 
             logs.forEach((log, i) => {

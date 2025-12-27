@@ -78,8 +78,8 @@ router.post('/provision', async (req: Request, res: Response, next: NextFunction
 
     await trackExecution(userId);
 
-    sendStep('🤖 Trymate: Analyzing architecture quotas...');
-    sendStep(`✅ Calibrating 17-Table Supabase MCP Architecture...`);
+    sendStep('[KERNEL] Analyzing brain quotas and architecture...');
+    sendStep(`[PROTO] Calibrating 17-Table Supabase MCP Infrastructure...`);
 
     let rawToken = accessToken;
     if (accessToken && !accessToken.startsWith('sbp_') && !accessToken.startsWith('sb_') && !accessToken.startsWith('eyJ')) {
@@ -115,7 +115,7 @@ router.post('/provision', async (req: Request, res: Response, next: NextFunction
       const storedProjectId = userData?.supabase_url?.match(/https:\/\/(.*)\.supabase\.co/)?.[1];
 
       if (!(userData && storedProjectId === targetProject.id && userData.supabase_secret_key)) {
-        sendStep('⚠️ Orphaned project detected. Purging stale infrastructure...');
+        sendStep('[GUARD] Orphaned project detected. Purging stale neural state...');
         const deleteRes = await fetch(`https://api.supabase.com/v1/projects/${targetProject.id}`, {
           method: 'DELETE',
           headers: { 'Authorization': `Bearer ${rawToken}` }
@@ -186,7 +186,7 @@ router.post('/provision', async (req: Request, res: Response, next: NextFunction
     await supabase.from('users').update({ tryliate_initialized: true }).eq('id', userId);
     // await db.update(users).set({ tryliateInitialized: true, supabaseConnected: true, updatedAt: new Date() }).where(eq(users.id, userId));
 
-    sendStep('🎉 Infrastructure Ready!', 'success');
+    sendStep('[SYSTEM] Infrastructure Synchronized. Protocol Stabilized.', 'success');
   } catch (error: any) {
     sendStep(`❌ Error: ${error.message}`, 'error');
   } finally {

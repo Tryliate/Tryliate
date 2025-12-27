@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Activity, Cpu, Server, Zap, Shield, History, Terminal } from 'lucide-react';
-import { useAuthSync } from '../BuildWorkflow/hooks/useAuthSync';
+import { useAuthSync } from '../BuildWorkflow/Auth/hooks/useAuthSync';
 import { supabase } from '@/lib/supabase';
 
 export default function NeuralEngine() {

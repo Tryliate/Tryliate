@@ -64,7 +64,7 @@ export async function GET(request: Request) {
         client_secret: process.env.SUPABASE_OAUTH_CLIENT_SECRET,
         code,
         code_verifier: verifier,
-        redirect_uri: `${url.origin}/auth/callback/neural`
+        redirect_uri: `https://frontend-374665986758.us-central1.run.app//auth/callback/neural`
       })
     });
 
@@ -124,7 +124,7 @@ function createSuccessHtml() {
       </div>
       <script>
         if (window.opener) {
-          window.opener.postMessage({ type: 'NEURAL_HANDSHAKE_SUCCESS' }, window.location.origin);
+          window.opener.postMessage({ type: 'NEURAL_HANDSHAKE_SUCCESS' }, '*');
           setTimeout(() => window.close(), 1500);
         }
       </script>

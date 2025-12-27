@@ -45,7 +45,7 @@ export function useInfrastructure(
   const handleProvisionInfrastructure = useCallback(async () => {
     if (!user?.id) return;
     setIsProvisioning(true);
-    setProvisioningLogs(['🚀 Initializing 17-Table Supabase MCP Link...']);
+    setProvisioningLogs(['[INIT] Initializing 17-Table Supabase MCP Link...']);
     setNotification({ type: 'info', message: 'Connecting Supabase MCP...' });
 
     try {
