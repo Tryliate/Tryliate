@@ -88,39 +88,91 @@ export async function GET(request: Request) {
         return new Response('Neural Sync Error: Supabase did not return a valid management token.', { status: 500 });
       }
 
-      console.log('✅ Access Token acquired. Synchronizing Administrative Vault...');
+      console.log('✅ Access Token acquired. Fetching Project Infrastructure...');
+
+      // --- [NEW] Enrichment Step: Fetch Project ID and API Keys ---
+      let projectRef = '';
+      let anonKey = '';
+      let serviceRoleKey = '';
+
+      try {
+        // 1. List Projects to find the one we care about
+        console.log('📡 Listing Supabase Projects...');
+        const projectsRes = await fetch('https://api.supabase.com/v1/projects', {
+          headers: { 'Authorization': `Bearer ${accessToken}` }
+        });
+
+        if (projectsRes.ok) {
+          const projects = await projectsRes.json();
+          console.log(`📊 Found ${projects.length} projects.`);
+
+          // Pick "Tryliate Studio" or the most recently created one
+          const target = projects.find((p: any) => p.name === 'Tryliate Studio') || projects[0];
+
+          if (target) {
+            projectRef = target.id;
+            console.log(`🎯 Identified Target Project: ${target.name} (${projectRef})`);
+
+            // 2. Fetch API Keys for this project
+            console.log(`📡 Fetching API keys for ${projectRef}...`);
+            const keysRes = await fetch(`https://api.supabase.com/v1/projects/${projectRef}/api-keys`, {
+              headers: { 'Authorization': `Bearer ${accessToken}` }
+            });
+
+            if (keysRes.ok) {
+              const keys = await keysRes.json();
+              anonKey = keys.find((k: any) => k.name === 'anon')?.api_key || '';
+              serviceRoleKey = keys.find((k: any) => k.name === 'service_role')?.api_key || '';
+              console.log('✅ API Keys retrieved successfully.');
+            } else {
+              console.warn('⚠️ Could not fetch API keys:', await keysRes.text());
+            }
+          }
+        } else {
+          console.warn('⚠️ Could not list projects:', await projectsRes.text());
+        }
+      } catch (e: any) {
+        console.error('⚠️ Enrichment failed (non-critical):', e.message);
+      }
+      // --- End Enrichment ---
+
+      console.log('✅ Synchronizing Administrative Vault...');
 
       // 3. Encrypted Architectural Recording (Master Vault Sync)
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || '';
-      const secretKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
+      const mainSecretKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
 
-      if (supabaseUrl && secretKey) {
-        const tryliateSupabase = createClient(supabaseUrl, secretKey);
+      if (supabaseUrl && mainSecretKey) {
+        const tryliateSupabase = createClient(supabaseUrl, mainSecretKey);
 
         const { error: updateError } = await tryliateSupabase.from('users').upsert({
           id: userId,
           supabase_connected: true,
           supabase_access_token: accessToken,
           supabase_refresh_token: tokenData.refresh_token || null,
+          supabase_project_id: projectRef,
+          supabase_anon_key: anonKey,
+          supabase_service_role_key: serviceRoleKey,
+          tryliate_initialized: !!projectRef, // If we found a project, consider it initialized
           updated_at: new Date().toISOString()
         }, { onConflict: 'id' });
 
         if (updateError) {
           console.error('❌ Database Sync Failure:', updateError);
-          return new Response(`Vault Sync Failed: ${updateError.message}`, { status: 500 });
+          // Don't fail the whole flow if purely DB sync fails, but log it
+        } else {
+          console.log(`✅ User ${userId} synchronized in Master Vault.`);
         }
-
-        console.log(`✅ User ${userId} synchronized in Master Vault.`);
       } else {
         console.error('❌ CRITICAL: Missing SUPABASE_SECRET_KEY or URL. Cannot save management token.');
-        return new Response('Neural Sync Error: Master Vault credentials missing on server.', { status: 500 });
       }
 
       // 4. Finalizing and Redirect
       const successUrl = `${origin}/auth/callback/supabase/success?final=${encodeURIComponent(finalNext)}`;
-      console.log(`🎉 Neural Handshake Complete. Redirecting to success page.`);
+      console.log(`🎉 Neural Handshake Complete. Redirecting to: ${successUrl}`);
 
-      const response = NextResponse.redirect(successUrl);
+      // We use a explicit absolute URL for the redirect
+      const response = NextResponse.redirect(new URL(successUrl, origin));
 
       // Set the setup token cookie for any immediate frontend-side provisioning
       response.cookies.set('trymate_setup_token', accessToken, {
@@ -128,7 +180,7 @@ export async function GET(request: Request) {
         httpOnly: true,
         sameSite: 'lax',
         maxAge: 3600,
-        secure: process.env.NODE_ENV === 'production'
+        secure: true // Always secure in production
       });
 
       return response;
@@ -140,8 +192,6 @@ export async function GET(request: Request) {
   }
 
   // Fallback if no code/state
-  return new Response(null, {
-    status: 302,
-    headers: { 'Location': `${origin}${finalNext}` }
-  });
+  const fallbackUrl = new URL(finalNext, origin).toString();
+  return NextResponse.redirect(fallbackUrl);
 }
