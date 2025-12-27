@@ -43,7 +43,10 @@ spec:
             - name: SUPABASE_URL
               value: https://edtfhsblomgamobizkbo.supabase.co
             - name: SUPABASE_SECRET_KEY
-              value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVkdGZoc2Jsb21nYW1vYml6a2JvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NjE3MzcxMSwiZXhwIjoyMDgxNzQ5NzExfQ.PGL7-BcL1ruEoOX1aPtP9tnpv_jQaeb4i1VjsOXxNHg
+              valueFrom:
+                secretKeyRef:
+                  name: supabase-secret-key
+                  key: latest
           image: us-central1-docker.pkg.dev/tryliate-production-v1/cloud-run-source-deploy/tryliate-registry@sha256:229cd45a4eeb31da04b6ab0e6794b07ed385f9386453e855707380096c5e5dc6
           ports:
             - containerPort: 8080
