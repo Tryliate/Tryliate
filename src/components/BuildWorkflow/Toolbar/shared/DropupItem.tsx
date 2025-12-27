@@ -5,13 +5,15 @@ interface DropupItemProps {
   icon: any;
   onClick: () => void;
   style?: React.CSSProperties;
+  tag?: string;
 }
 
 export const DropupItem: React.FC<DropupItemProps> = ({
   label,
   icon: Icon,
   onClick,
-  style
+  style,
+  tag
 }) => {
   return (
     <div
@@ -31,6 +33,20 @@ export const DropupItem: React.FC<DropupItemProps> = ({
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#ccc', fontSize: '13px' }}>
         <Icon size={14} />
         {label}
+        {tag && (
+          <span style={{ 
+            fontSize: '8px', 
+            background: '#fff', 
+            color: '#000', 
+            padding: '1px 4px', 
+            borderRadius: '4px', 
+            fontWeight: 1000,
+            letterSpacing: '0.02em',
+            marginLeft: '4px'
+          }}>
+            {tag}
+          </span>
+        )}
       </div>
       <button
         style={{

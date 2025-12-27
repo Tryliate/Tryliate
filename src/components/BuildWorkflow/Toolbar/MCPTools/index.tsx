@@ -6,6 +6,8 @@ import { DropupContent } from '../shared/DropupContent';
 import { MCPHubItem } from './MCPHubItem';
 import { DiscoveryQueue } from './DiscoveryQueue';
 
+import { NangoHubItem } from './NangoHubItem';
+
 interface MCPToolsProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
@@ -38,6 +40,7 @@ export const MCPTools: React.FC<MCPToolsProps> = ({ isOpen, setIsOpen, onOpenOve
         category="TOOL"
       >
         <MCPHubItem onOpenOverlay={onOpenOverlay} setOpen={setIsOpen} />
+        <NangoHubItem onOpenOverlay={onOpenOverlay} setOpen={setIsOpen} />
         <DiscoveryQueue />
       </DropupContent>
       {noCapsule ? (

@@ -162,6 +162,45 @@ export const OverlayHeader = ({
             </div>
           )}
 
+          {/* Nango Hub Categories */}
+          {activeOverlay.subType === 'Nango Hub' && setActiveHubCategory && (
+            <div style={{ display: 'flex', alignItems: 'center', background: '#0a0a0a', borderRadius: '40px', padding: '4px', border: '1px solid #222', gap: '4px', height: '40px' }}>
+              <div style={{
+                width: '32px', height: '32px', borderRadius: '50%', background: '#1a1a1a', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666'
+              }}>
+                <Sparkles size={14} />
+              </div>
+              {['CRM', 'Productivity', 'Communication', 'Development', 'Analytics', 'Payments'].map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => setActiveHubCategory(activeHubCategory === cat ? null : cat)}
+                  style={{
+                    padding: '0 16px',
+                    height: '32px',
+                    borderRadius: '20px',
+                    background: activeHubCategory === cat ? '#fff' : 'transparent',
+                    color: activeHubCategory === cat ? '#000' : '#666',
+                    border: 'none',
+                    fontSize: '10px',
+                    fontWeight: 900,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    letterSpacing: '0.05em',
+                    textTransform: 'uppercase',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {cat}
+                </button>
+              ))}
+              <div style={{ width: '1px', height: '16px', background: '#333', margin: '0 2px' }} />
+              <CloseButton onClose={onClose} />
+            </div>
+          )}
+
           {/* Flow Categories */}
           {activeOverlay.category === 'FLOW' && setActiveFlowCategory && (
             <div style={{ display: 'flex', alignItems: 'center', background: '#0a0a0a', borderRadius: '40px', padding: '4px', border: '1px solid #222', gap: '4px', height: '40px' }}>

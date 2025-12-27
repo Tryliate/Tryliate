@@ -6,6 +6,8 @@ import { FoundryFeed } from './components/FoundryFeed';
 import { MCPHubFeed } from './components/MCPHubFeed';
 import { FlowFeed } from './components/FlowFeed';
 import { AIResearchPanel } from './components/AIResearchPanel';
+import { NangoToolFeed } from './components/NangoToolFeed';
+import { FULL_NANGO_REGISTRY } from '../../../data/nango-registry';
 
 interface WorkflowOverlayProps {
   isOpen: boolean;
@@ -235,6 +237,16 @@ export const WorkflowOverlay = ({
             <MCPHubFeed
               dynamicMCPServers={dynamicMCPServers}
               activeHubCategory={activeHubCategory}
+              isViewAll={isViewAll}
+              setIsViewAll={setIsViewAll}
+              activeAISidebarNode={activeAISidebarNode}
+              setActiveAISidebarNode={setActiveAISidebarNode}
+              handleSpawnNode={handleSpawnNode}
+            />
+          ) : activeOverlay.subType === 'Nango Hub' ? (
+            <NangoToolFeed
+              integrations={FULL_NANGO_REGISTRY}
+              activeCategory={activeHubCategory}
               isViewAll={isViewAll}
               setIsViewAll={setIsViewAll}
               activeAISidebarNode={activeAISidebarNode}

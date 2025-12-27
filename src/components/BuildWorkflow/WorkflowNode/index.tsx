@@ -15,7 +15,7 @@ interface ProtocolNodeData {
     platform?: string;
     language?: string;
     version?: string;
-    tags?: string;
+    tags?: any;
     author?: string;
     homepage?: string;
     bugs?: string;
@@ -24,9 +24,13 @@ interface ProtocolNodeData {
     license?: string;
     capabilities?: string;
     stats?: string;
+    auth_mode?: string;
+    is_nango?: boolean;
+    [key: string]: any;
   };
   label?: string;
   description?: string;
+  category?: string;
   onEdit?: () => void;
 }
 
