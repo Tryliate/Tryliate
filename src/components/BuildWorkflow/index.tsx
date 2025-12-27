@@ -158,7 +158,7 @@ const BuildWorkflowInner = () => {
             if (isSupabaseConnected) {
               handleInfrastructureReset();
             } else {
-              handleAuthorize();
+              setIsSmartConnectOpen(true);
             }
           }}
           onOpenOverlay={(cat, sub) => setActiveOverlay({ category: cat, subType: sub })}
@@ -293,6 +293,14 @@ const BuildWorkflowInner = () => {
         aiTokens={aiTokens}
         setAiTokens={setAiTokens}
         user={user}
+      />
+      <SmartConnectOverlay 
+        isOpen={isSmartConnectOpen}
+        onClose={() => setIsSmartConnectOpen(false)}
+        onAuthorize={() => {
+          setIsSmartConnectOpen(false);
+          handleAuthorize();
+        }}
       />
     </div>
   );

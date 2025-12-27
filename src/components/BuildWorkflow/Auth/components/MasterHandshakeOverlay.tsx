@@ -133,9 +133,9 @@ export const MasterHandshakeOverlay: React.FC<MasterHandshakeOverlayProps> = ({
             disabled={status !== 'idle' && status !== 'error'}
             style={{
               width: '100%',
-              background: status === 'error' ? '#ff3b30' : '#fff',
-              color: '#000',
-              border: 'none',
+              background: status === 'error' ? '#151515' : '#fff',
+              color: status === 'error' ? '#fff' : '#000',
+              border: status === 'error' ? '1px solid rgba(255,255,255,0.1)' : 'none',
               padding: '18px',
               borderRadius: '24px',
               fontSize: '14px',
