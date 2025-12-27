@@ -16,16 +16,15 @@ export async function GET(request: Request) {
     We must use the explicit public URL if defined, or fall back to x-forwarded-host.
   */
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '');
-  const forwardedHost = request.headers.get('x-forwarded-host');
-  const forwardedProto = request.headers.get('x-forwarded-proto');
 
-  let origin = requestUrl.origin;
+  // Enhanced Origin Detection for Cloud Run / Proxies
+  const host = request.headers.get('x-forwarded-host') || request.headers.get('host');
+  const proto = request.headers.get('x-forwarded-proto') || 'https';
 
-  if (siteUrl) {
-    origin = siteUrl;
-  } else if (forwardedHost) {
-    origin = `${forwardedProto || 'https'}://${forwardedHost}`;
-  }
+  let origin = (host) ? `${proto}://${host}` : (siteUrl || requestUrl.origin);
+
+  // Ensure origin doesn't end with slash
+  origin = origin.replace(/\/$/, '');
 
   let finalNext = requestUrl.searchParams.get('next') ?? '/';
 
