@@ -10,7 +10,7 @@ steps:
       - "docker/frontend.Dockerfile"
       # Build Args for Public/Client-Side Config
       - "--build-arg"
-      - "NEXT_PUBLIC_SITE_URL=https://frontend-nh767yfnoq-uc.a.run.app"
+      - "NEXT_PUBLIC_SITE_URL=https://frontend-374665986758.us-central1.run.app"
       - "--build-arg"
       - "NEXT_PUBLIC_SUPABASE_URL=https://edtfhsblomgamobizkbo.supabase.co"
       - "--build-arg"

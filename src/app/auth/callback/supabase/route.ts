@@ -21,22 +21,24 @@ export async function GET(request: Request) {
   const host = request.headers.get('x-forwarded-host') || request.headers.get('host');
   const proto = request.headers.get('x-forwarded-proto') || 'https';
 
-  // PRIORITY 1: Configured Site URL (Most reliable for Prod)
-  // PRIORITY 2: Forwarded Headers (Reliable for Previews/Vercel)
-  // PRIORITY 3: Request Origin (Fallback for Local)
-  let origin = siteUrl || ((host) ? `${proto}://${host}` : requestUrl.origin);
+  // PRIORITY 1: Forwarded Headers (Matches User's Browser URL)
+  // PRIORITY 2: Configured Site URL (Fallback for internal/stand-alone)
+  // PRIORITY 3: Request Origin (Last resort)
+  let origin = (host) ? `${proto}://${host}` : (siteUrl || requestUrl.origin);
 
   // Ensure origin doesn't end with slash
   origin = origin.replace(/\/$/, '');
-
-  let finalNext = requestUrl.searchParams.get('next') ?? '/';
 
   console.log('🔗 Incoming Neural Handshake:', {
     code: !!code,
     state,
     detectedOrigin: origin,
+    siteUrlConfig: siteUrl,
+    headerHost: host,
     requestUrl: request.url
   });
+
+  let finalNext = requestUrl.searchParams.get('next') ?? '/';
 
   const renderError = (title: string, message: string, details?: any) => {
     return new Response(`
