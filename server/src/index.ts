@@ -131,7 +131,7 @@ app.get('/health', async (req: Request, res: Response) => {
     timestamp: new Date().toISOString(),
     services: {
       supabase: 'probing',
-      neon: 'probing',
+      master_db: 'probing',
       redis: 'probing'
     }
   };
@@ -142,12 +142,12 @@ app.get('/health', async (req: Request, res: Response) => {
     const { error: sbError } = await supabase.from('users').select('count', { count: 'exact', head: true });
     health.services.supabase = sbError ? `error: ${sbError.message}` : 'healthy';
 
-    // 2. Check Neon (Drizzle)
+    // 2. Check Master Database (Supabase)
     try {
       await pool.query('SELECT 1');
-      health.services.neon = 'healthy';
+      health.services.master_db = 'healthy';
     } catch (e: any) {
-      health.services.neon = `error: ${e.message}`;
+      health.services.master_db = `error: ${e.message}`;
     }
 
     // 3. Check Redis (Upstash)
@@ -200,7 +200,7 @@ app.get('/api/debug/schema-repair', async (req: Request, res: Response) => {
       message += 'Foundry: Created table foundry_nodes. ';
     }
 
-    // 2. Repair users (Neon/Drizzle Vault)
+    // 2. Repair users (Master/Drizzle Vault)
     const resUsers = await pool.query(`
       SELECT column_name FROM information_schema.columns WHERE table_name = 'users'
     `);
@@ -214,20 +214,20 @@ app.get('/api/debug/schema-repair', async (req: Request, res: Response) => {
           supabase_access_token TEXT,
           supabase_db_pass TEXT,
           supabase_org_id TEXT,
-          user_supabase_url TEXT,
+          supabase_url TEXT,
           tryliate_initialized BOOLEAN DEFAULT false,
           supabase_connected BOOLEAN DEFAULT false,
           created_at TIMESTAMPTZ DEFAULT now(),
           updated_at TIMESTAMPTZ DEFAULT now()
         );
       `);
-      message += 'Neon: Created users table. ';
+      message += 'Master: Created users table. ';
     } else {
-      const required = ['supabase_project_id', 'supabase_access_token', 'supabase_db_pass', 'supabase_connected', 'supabase_org_id', 'user_supabase_url'];
+      const required = ['supabase_project_id', 'supabase_access_token', 'supabase_db_pass', 'supabase_connected', 'supabase_org_id', 'supabase_url'];
       for (const col of required) {
         if (!userColumns.includes(col)) {
           await pool.query(`ALTER TABLE public.users ADD COLUMN IF NOT EXISTS ${col} TEXT`);
-          message += `Neon: Added ${col}. `;
+          message += `Master: Added ${col}. `;
         }
       }
     }
@@ -293,6 +293,20 @@ CREATE TABLE IF NOT EXISTS public.nodes (
   width FLOAT,
   height FLOAT,
   created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT UNIQUE,
+  supabase_project_id TEXT,
+  supabase_access_token TEXT,
+  supabase_db_pass TEXT,
+  supabase_org_id TEXT,
+  supabase_url TEXT,
+  tryliate_initialized BOOLEAN DEFAULT false,
+  supabase_connected BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS public.edges (
@@ -692,6 +706,10 @@ async function waitForProjectActive(projectId: string, accessToken: string): Pro
 }
 
 
+app.get('/api/infrastructure/provision', (req, res) => {
+  res.status(200).send('🛰️ Tryliate Infrastructure Provisioning Endpoint is LIVE. Please use POST to initiate calibration.');
+});
+
 app.post('/api/infrastructure/provision', async (req: Request, res: Response, next: NextFunction) => {
   const sendStep = (message: string, type: 'info' | 'success' | 'error' = 'info') => {
     if (!res.writableEnded) res.write(JSON.stringify({ message, type }) + '\n');
@@ -708,26 +726,28 @@ app.post('/api/infrastructure/provision', async (req: Request, res: Response, ne
     if (!accessToken) {
       console.log(`[PROVISION] Token missing in request for ${userId}. Probing Vaults...`);
 
-      // Probe Supabase Vault for Management Token
-      console.log(`[PROVISION] Probing Supabase Master Vault for ${userId}...`);
-      const { data: vaultData, error: vaultErr } = await supabase
-        .from('users')
-        .select('supabase_access_token, supabase_secret_key')
-        .eq('id', userId)
-        .single();
+      // Probe Master Vault for Management Token via Drizzle
+      console.log(`[PROVISION] Probing Master Vault for ${userId}...`);
+      try {
+        const userRecords = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+        const vaultData = userRecords[0];
 
-      if (vaultErr) console.log(`[PROVISION] Supabase Vault Probe returned error: ${vaultErr.message} (Code: ${vaultErr.code})`);
+        if (vaultData) {
+          // Use the Management Token (sbp_...) for provisioning if available
+          accessToken = vaultData.supabaseAccessToken || undefined;
 
-      // Use the Management Token (sbp_...) for provisioning if available
-      accessToken = vaultData?.supabase_access_token;
-
-      if (accessToken) {
-        console.log(`[PROVISION] Management Token found in Supabase Vault.`);
-      } else if (vaultData?.supabase_secret_key) {
-        // We have project keys but no management session. 
-        // We can't provision/list projects, but we might be able to skip to Stage 1.
-        console.log(`[PROVISION] No Management Token, but Service Key found. Attempting session recovery...`);
-        accessToken = vaultData.supabase_secret_key; // risky fallback, but might work for some flows
+          if (accessToken) {
+            console.log(`[PROVISION] Management Token found in Master Vault.`);
+          } else if (vaultData.supabaseSecretKey) {
+            // We have project keys but no management session. 
+            console.log(`[PROVISION] No Management Token, but Service Key found. Attempting session recovery...`);
+            accessToken = vaultData.supabaseSecretKey || undefined;
+          }
+        } else {
+          console.log(`[PROVISION] No user record found in Master Vault for ${userId}`);
+        }
+      } catch (vaultErr: any) {
+        console.error(`[PROVISION] Master Vault Probe failed: ${vaultErr.message}`);
       }
 
       // No fallback to Neon. BYOI is strictly Supabase-to-Supabase.
@@ -790,6 +810,7 @@ app.post('/api/infrastructure/provision', async (req: Request, res: Response, ne
       // Stage 0: Save project mapping immediately
       await supabase.from('users').update({
         supabase_url: `https://${targetProject.id}.supabase.co`,
+        supabase_project_id: targetProject.id,
         supabase_org_id: targetProject.organization_id || targetProject.organizationId || ''
       }).eq('id', userId);
 
@@ -864,6 +885,7 @@ app.post('/api/infrastructure/provision', async (req: Request, res: Response, ne
       // Stage 0.1: Save new project ID
       await supabase.from('users').update({
         supabase_url: `https://${targetProject.id}.supabase.co`,
+        supabase_project_id: targetProject.id,
         supabase_org_id: targetProject.organization_id || targetProject.organizationId || primaryOrg.id
       }).eq('id', userId);
     }
@@ -899,6 +921,7 @@ app.post('/api/infrastructure/provision', async (req: Request, res: Response, ne
 
     const stage1UpdateData = {
       supabase_connected: true,
+      supabase_project_id: targetProject.id,
       supabase_org_id: targetProject.organization_id || targetProject.organizationId || '',
       supabase_url: `https://${targetProject.id}.supabase.co`,
       supabase_publishable_key: anonKey,
@@ -1022,27 +1045,26 @@ app.post('/api/infrastructure/provision-engine', async (req: Request, res: Respo
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY);
 
-    // Fetch user from Supabase with fallback to Neon
-    let targetUser: any = null;
-    const { data: sbUser } = await supabase.from('users').select('*').eq('id', userId).single();
-    targetUser = sbUser;
+    const userRecords = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+    const targetUser = userRecords[0];
 
-    // No fallback to Neon. BYOI is strictly Supabase.
+    if (!targetUser) throw new Error('User profile not found in Master Vault.');
 
-    if (!targetUser) throw new Error('User profile not found in Neural Vault.');
-
-    if (!accessToken) accessToken = targetUser.supabase_access_token;
+    if (!accessToken) accessToken = targetUser.supabaseAccessToken;
     if (!accessToken) throw new Error('Neural calibration incomplete: Supabase authorization missing.');
 
     sendStep('⚡ Establishing MCP Bridge Connection...');
-    const mcpSessionId = await initializeSupabaseMCP(targetUser.supabase_project_id, targetUser.supabase_access_token);
+    if (!targetUser.supabaseProjectId || !targetUser.supabaseAccessToken) {
+      throw new Error('Supabase project configuration missing in vault.');
+    }
+    const mcpSessionId = await initializeSupabaseMCP(targetUser.supabaseProjectId, targetUser.supabaseAccessToken);
 
     sendStep('💉 Injecting Native Engine Schema into Supabase...');
     const statements = splitSqlStatements(NATIVE_ENGINE_SQL);
     let success = 0;
     for (const stmt of statements) {
       try {
-        await callSupabaseMCP(targetUser.supabase_project_id, targetUser.supabase_access_token, 'execute_sql', { query: stmt + ';' }, mcpSessionId);
+        await callSupabaseMCP(targetUser.supabaseProjectId!, targetUser.supabaseAccessToken!, 'execute_sql', { query: stmt + ';' }, mcpSessionId);
         success++;
       } catch (e) { }
     }
@@ -1065,20 +1087,16 @@ app.post('/api/engine/run', async (req: Request, res: Response, next: NextFuncti
       input: z.any().optional().default({})
     }).parse(req.body);
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY);
-    const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', userId)
-      .single();
+    const userRecords = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+    const user = userRecords[0];
 
-    if (userError || !user || !user.user_supabase_url || !user.supabase_db_pass) {
+    if (!user || !user.supabaseUrl || !user.supabaseDbPass) {
       throw new Error('User infrastructure not fully provisioned.');
     }
 
     // Build connection string
-    const host = user.user_supabase_url.replace('https://', '').replace('.supabase.co', '');
-    const connectionString = `postgresql://postgres:${user.supabase_db_pass}@db.${host}.supabase.co:5432/postgres`;
+    const host = user.supabaseUrl.replace('https://', '').replace('.supabase.co', '');
+    const connectionString = `postgresql://postgres:${user.supabaseDbPass}@db.${host}.supabase.co:5432/postgres`;
 
     const adapter = new PostgresQueueAdapter(connectionString);
     await adapter.ensureSchema();
@@ -1281,9 +1299,9 @@ app.post('/api/infrastructure/reset', async (req: Request, res: Response, next: 
         tryliate_initialized: false,
         supabase_connected: false,
         supabase_project_id: null,
-        supabase_service_role_key: null,
-        user_supabase_url: null,
-        user_supabase_anon_key: null,
+        supabase_secret_key: null,
+        supabase_url: null,
+        supabase_publishable_key: null,
         supabase_db_pass: null
       })
       .eq('id', userId);
@@ -1482,9 +1500,9 @@ app.get('/api/mcp/official-refs', async (req: Request, res: Response) => {
 app.get('/api/mcp/foundry-nodes', async (req: Request, res: Response) => {
   try {
     // Debug connection availability
-    const hasDbUrl = !!(process.env.DATABASE_URL || process.env.NEON_DB_URL || process.env.NEON_DATABASE_URL);
+    const hasDbUrl = !!(process.env.DATABASE_URL || process.env.NEON_DB_URL || process.env.NEON_DATABASE_URL || process.env.SUPABASE_DATABASE_URL);
     if (!hasDbUrl) {
-      throw new Error('NEON_DATABASE_URL is missing from environment variables.');
+      throw new Error('Neural Database connection string (NEON_DATABASE_URL or DATABASE_URL) is missing.');
     }
 
     const result = await db.select().from(foundryNodes);
@@ -1501,7 +1519,7 @@ app.get('/api/mcp/foundry-nodes', async (req: Request, res: Response) => {
   }
 });
 
-const NEON_DB_URL = process.env.DATABASE_URL || process.env.NEON_DB_URL || process.env.NEON_DATABASE_URL;
+const MASTER_DB_URL = process.env.SUPABASE_DATABASE_URL || process.env.DATABASE_URL;
 
 app.get('/api/mcp/ingest', async (req: Request, res: Response, next: NextFunction) => {
   try {
