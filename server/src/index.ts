@@ -514,6 +514,7 @@ END $$;
 `;
 
 const NATIVE_ENGINE_SQL = `
+-- ⚡ Neural Engine Core
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 CREATE SCHEMA IF NOT EXISTS tryliate;
 
@@ -556,11 +557,22 @@ CREATE TABLE IF NOT EXISTS tryliate.steps (
   completed_at TIMESTAMP WITH TIME ZONE
 );
 
--- Try to add to publication if it exists
+-- Realtime Neural Engine Sync (Error Tolerant)
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
-    ALTER PUBLICATION supabase_realtime ADD TABLE tryliate.jobs, tryliate.runs, tryliate.steps;
+    BEGIN
+      ALTER PUBLICATION supabase_realtime ADD TABLE tryliate.jobs;
+    EXCEPTION WHEN others THEN NULL;
+    END;
+    BEGIN
+      ALTER PUBLICATION supabase_realtime ADD TABLE tryliate.runs;
+    EXCEPTION WHEN others THEN NULL;
+    END;
+    BEGIN
+      ALTER PUBLICATION supabase_realtime ADD TABLE tryliate.steps;
+    EXCEPTION WHEN others THEN NULL;
+    END;
   END IF;
 EXCEPTION WHEN others THEN NULL;
 END $$;
@@ -669,24 +681,40 @@ function splitSqlStatements(sql: string): string[] {
   const statements: string[] = [];
   let current = '';
   let inDollarQuote = false;
+  let dollarQuoteTag = null;
 
   const lines = sql.split('\n');
   for (let line of lines) {
-    // Basic check for dollar quoting $$, $tag$
+    const trimmedLine = line.trim();
+    if (trimmedLine.startsWith('--')) continue; // Skip comments
+
+    // Enhanced Dollar Quoting Check
     if (line.includes('$$')) {
       inDollarQuote = !inDollarQuote;
+    } else {
+      // Check for named dollar tags like $tag$
+      const tagMatch = line.match(/\$(\w+)\$/);
+      if (tagMatch) {
+        if (!inDollarQuote) {
+          inDollarQuote = true;
+          dollarQuoteTag = tagMatch[1];
+        } else if (tagMatch[1] === dollarQuoteTag) {
+          inDollarQuote = false;
+          dollarQuoteTag = null;
+        }
+      }
     }
 
     current += line + '\n';
 
-    if (!inDollarQuote && line.trim().endsWith(';')) {
+    if (!inDollarQuote && trimmedLine.endsWith(';')) {
       statements.push(current.trim());
       current = '';
     }
   }
 
   if (current.trim()) statements.push(current.trim());
-  return statements.filter(s => s.length > 0);
+  return statements.filter(s => s.length > 5); // Ignore very short/empty stmts
 }
 
 async function waitForProjectActive(projectId: string, accessToken: string): Promise<any> {
@@ -726,31 +754,39 @@ app.post('/api/infrastructure/provision', async (req: Request, res: Response, ne
     if (!accessToken) {
       console.log(`[PROVISION] Token missing in request for ${userId}. Probing Vaults...`);
 
-      // Probe Master Vault for Management Token via Drizzle
-      console.log(`[PROVISION] Probing Master Vault for ${userId}...`);
+      // 1. Probe Runtime Vault (Drizzle/Neon)
       try {
         const userRecords = await db.select().from(users).where(eq(users.id, userId)).limit(1);
         const vaultData = userRecords[0];
 
-        if (vaultData) {
-          // Use the Management Token (sbp_...) for provisioning if available
-          accessToken = vaultData.supabaseAccessToken || undefined;
-
-          if (accessToken) {
-            console.log(`[PROVISION] Management Token found in Master Vault.`);
-          } else if (vaultData.supabaseSecretKey) {
-            // We have project keys but no management session. 
-            console.log(`[PROVISION] No Management Token, but Service Key found. Attempting session recovery...`);
-            accessToken = vaultData.supabaseSecretKey || undefined;
-          }
-        } else {
-          console.log(`[PROVISION] No user record found in Master Vault for ${userId}`);
+        if (vaultData && vaultData.supabaseAccessToken) {
+          accessToken = vaultData.supabaseAccessToken;
+          console.log(`[PROVISION] Management Token found in Runtime Vault (Drizzle).`);
         }
       } catch (vaultErr: any) {
-        console.error(`[PROVISION] Master Vault Probe failed: ${vaultErr.message}`);
+        console.warn(`[PROVISION] Runtime Vault Probe failed: ${vaultErr.message}`);
       }
 
-      // No fallback to Neon. BYOI is strictly Supabase-to-Supabase.
+      // 2. Probe Administrative Vault (Supabase REST API) if still missing
+      if (!accessToken) {
+        console.log(`[PROVISION] Probing Administrative Vault for ${userId}...`);
+        try {
+          const { data: userData, error: sbError } = await supabase
+            .from('users')
+            .select('supabase_access_token, supabase_secret_key')
+            .eq('id', userId)
+            .single();
+
+          if (userData) {
+            accessToken = userData.supabase_access_token || undefined;
+            if (accessToken) {
+              console.log(`[PROVISION] Management Token found in Administrative Vault.`);
+            }
+          }
+        } catch (vaultErr: any) {
+          console.error(`[PROVISION] Administrative Vault Probe failed: ${vaultErr.message}`);
+        }
+      }
     }
 
     if (!accessToken) {
@@ -954,8 +990,8 @@ app.post('/api/infrastructure/provision', async (req: Request, res: Response, ne
       try {
         // Strategy: Official Supabase MCP (execute_sql with valid Handshake)
         sendStep(`💉 Calibrating 17-Table Supabase MCP Architecture...`);
-        // Use the Secret Key (service_role) for MCP Bridge
-        const mcpSessionId = await initializeSupabaseMCP(targetProject.id, secretKey);
+        // Use the Management Token (sbp_...) for MCP Bridge Handshake
+        const mcpSessionId = await initializeSupabaseMCP(targetProject.id, accessToken);
 
         // Combine schemas for full 17-table Neural Architecture
         const fullSchemaSql = BYOI_SCHEMA_SQL + '\n' + NATIVE_ENGINE_SQL;
@@ -963,14 +999,14 @@ app.post('/api/infrastructure/provision', async (req: Request, res: Response, ne
         let successCount = 0;
         for (const stmt of statements) {
           try {
-            await callSupabaseMCP(targetProject.id, secretKey, 'execute_sql', {
+            await callSupabaseMCP(targetProject.id, accessToken, 'execute_sql', {
               query: stmt + ';'
             }, mcpSessionId);
             successCount++;
             if (stmt.toLowerCase().includes('create table')) {
               // Extract table name from public.xxx or tryliate.xxx
-              const tableName = stmt.match(/(?:public|tryliate)\.([\w_]+)/)?.[1] || 'infrastructure';
-              sendStep(`✅ Calibrated (Supabase MCP): ${tableName.toUpperCase()}`);
+              const tableName = stmt.match(/(?:public|tryliate|registry)\.([\w_]+)/)?.[1] || 'infrastructure';
+              sendStep(`✅ Calibrated: ${tableName.toUpperCase()}`);
             }
           } catch (stmtErr: any) {
             console.warn(`⚠️ Statement failed: ${stmtErr.message}`);
@@ -1456,16 +1492,16 @@ app.post('/api/neural/proxy', async (req: Request, res: Response, next: NextFunc
     const supabase = createClient(SUPABASE_URL, SUPABASE_SECRET_KEY);
     const { data: user } = await supabase.from('users').select('*').eq('id', userId).single();
 
-    if (!user || !user.supabase_url || !user.supabase_secret_key) {
-      throw new Error('Infrastructure bridge credentials missing.');
+    if (!user || !user.supabase_url || !user.supabase_access_token) {
+      throw new Error('Infrastructure bridge credentials (Management Token) missing.');
     }
 
     // Extract project project_ref from supabase_url (e.g., https://[project_ref].supabase.co)
     const projectRef = user.supabase_url.split('://')[1]?.split('.')[0];
     if (!projectRef) throw new Error('Invalid Supabase URL in infrastructure vault.');
 
-    const sessionId = await initializeSupabaseMCP(projectRef, user.supabase_secret_key);
-    const result = await callSupabaseMCP(projectRef, user.supabase_secret_key, tool, args, sessionId);
+    const sessionId = await initializeSupabaseMCP(projectRef, user.supabase_access_token);
+    const result = await callSupabaseMCP(projectRef, user.supabase_access_token, tool, args, sessionId);
 
     res.json({ success: true, result });
   } catch (err: any) {

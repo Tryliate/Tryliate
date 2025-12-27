@@ -49,7 +49,8 @@ export async function GET(request: Request) {
       if (nextOverride) finalNext = nextOverride;
 
       if (!userId) {
-        return new Response(`Neural Handshake Error: Missing user identity in state DNA.`, { status: 400 });
+        console.error('❌ Neural Handshake Error: Missing user identity in state DNA.');
+        return new Response(`Neural Handshake Error: Missing user identity in state.`, { status: 400 });
       }
 
       // 2. Token Exchange (Management API)
@@ -57,10 +58,11 @@ export async function GET(request: Request) {
       const CLIENT_SECRET = process.env.SUPABASE_OAUTH_CLIENT_SECRET;
 
       if (!CLIENT_ID || !CLIENT_SECRET) {
-        console.error('Missing OAuth Credentials', { hasClientId: !!CLIENT_ID, hasClientSecret: !!CLIENT_SECRET });
-        return new Response('Neural Sync Error: Platform environment not calibrated for OAuth.', { status: 500 });
+        console.error('❌ Missing OAuth Credentials:', { hasClientId: !!CLIENT_ID, hasClientSecret: !!CLIENT_SECRET });
+        return new Response('Neural Sync Error: Platform environment not calibrated (Missing CLIENT_ID or CLIENT_SECRET).', { status: 500 });
       }
 
+      console.log('📡 Exchanging code for Management Token...');
       const tokenResponse = await fetch('https://api.supabase.com/v1/oauth/token', {
         method: 'POST',
         headers: {
@@ -76,74 +78,65 @@ export async function GET(request: Request) {
 
       const tokenData = await tokenResponse.json();
 
-      if (tokenData.error) {
-        console.error('❌ Token exchange failed:', tokenData);
-        return new Response(`Infrastructure Auth Failed: ${tokenData.error_description || tokenData.error}`, { status: 500 });
+      if (!tokenResponse.ok || tokenData.error) {
+        console.error('❌ Supabase Token API Error:', tokenData);
+        return new Response(`Infrastructure Auth Failed: ${tokenData.error_description || tokenData.error || 'Token exchange failed'}`, { status: 500 });
       }
 
       const accessToken = tokenData.access_token;
-      console.log('✅ Access Token acquired. Deferring Infrastructure Provisioning to User Control...');
-
-      // 3. Encrypted Architectural Recording (PENDING STATE)
-      // 3. Encrypted Architectural Recording (UPDATED)
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-      const secretKey = process.env.SUPABASE_SECRET_KEY;
-
-      if (supabaseUrl && secretKey) {
-        try {
-          const tryliateSupabase = createClient(supabaseUrl, secretKey);
-
-          console.log(`🔄 Upserting Supabase keys for user ${userId}...`);
-
-          const { error: updateError } = await tryliateSupabase.from('users').upsert({
-            id: userId,
-            supabase_connected: true,
-            supabase_access_token: accessToken,
-            supabase_refresh_token: tokenData.refresh_token || null,
-            updated_at: new Date().toISOString()
-          }, { onConflict: 'id' });
-
-          if (updateError) {
-            console.error('❌ Failed to upsert user profile:', updateError);
-          } else {
-            console.log('✅ User record synchronized in vault.');
-          }
-        } catch (err) {
-          console.error('❌ Unexpected error during Supabase sync:', err);
-        }
-      } else {
-        console.warn('⚠️ Missing Secret Key or Supabase URL. Cannot update user profile.');
+      if (!accessToken) {
+        console.error('❌ No access token in Supabase response:', tokenData);
+        return new Response('Neural Sync Error: Supabase did not return a valid management token.', { status: 500 });
       }
 
-      console.log('🎉 Neural Handshake Complete. Preparing Redirect...');
+      console.log('✅ Access Token acquired. Synchronizing Administrative Vault...');
 
-      // 4. Secure Cookie Storage for the "Create DB" Step
-      const redirectUrlStr = `${origin}/auth/callback/supabase/success?final=${encodeURIComponent(finalNext)}`;
-      console.log(`➡️ Redirecting to: ${redirectUrlStr}`);
+      // 3. Encrypted Architectural Recording (Master Vault Sync)
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || '';
+      const secretKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
 
-      // We use a standard Response object instead of NextResponse to avoid potential internal Next.js
-      // relative-URL resolution issues in the Cloud Run environment.
-      const response = new Response(null, {
-        status: 302,
-        headers: {
-          'Location': redirectUrlStr,
+      if (supabaseUrl && secretKey) {
+        const tryliateSupabase = createClient(supabaseUrl, secretKey);
+
+        const { error: updateError } = await tryliateSupabase.from('users').upsert({
+          id: userId,
+          supabase_connected: true,
+          supabase_access_token: accessToken,
+          supabase_refresh_token: tokenData.refresh_token || null,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'id' });
+
+        if (updateError) {
+          console.error('❌ Database Sync Failure:', updateError);
+          return new Response(`Vault Sync Failed: ${updateError.message}`, { status: 500 });
         }
+
+        console.log(`✅ User ${userId} synchronized in Master Vault.`);
+      } else {
+        console.error('❌ CRITICAL: Missing SUPABASE_SECRET_KEY or URL. Cannot save management token.');
+        return new Response('Neural Sync Error: Master Vault credentials missing on server.', { status: 500 });
+      }
+
+      // 4. Finalizing and Redirect
+      const successUrl = `${origin}/auth/callback/supabase/success?final=${encodeURIComponent(finalNext)}`;
+      console.log(`🎉 Neural Handshake Complete. Redirecting to success page.`);
+
+      const response = NextResponse.redirect(successUrl);
+
+      // Set the setup token cookie for any immediate frontend-side provisioning
+      response.cookies.set('trymate_setup_token', accessToken, {
+        path: '/',
+        httpOnly: true,
+        sameSite: 'lax',
+        maxAge: 3600,
+        secure: process.env.NODE_ENV === 'production'
       });
 
-      // Manually set the cookie header
-      const cookieValue = `trymate_setup_token=${accessToken}; Path=/; HttpOnly; SameSite=Lax; Max-Age=3600${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`;
-      response.headers.append('Set-Cookie', cookieValue);
-
-      console.log('🍪 Cookie header set. Returning standard Response.');
       return response;
 
     } catch (err: any) {
       console.error('❌ Critical Callback Failure:', err);
-      // Fallback redirect on error
-      return new Response(null, {
-        status: 302,
-        headers: { 'Location': `${origin}${finalNext}?error=auth_failed` }
-      });
+      return new Response(`Neural Link Aborted: ${err.message}`, { status: 500 });
     }
   }
 

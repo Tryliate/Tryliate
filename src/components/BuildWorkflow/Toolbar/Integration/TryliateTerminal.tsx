@@ -16,7 +16,7 @@ interface TryliateTerminalProps {
 export const TryliateTerminal: React.FC<TryliateTerminalProps> = ({
   logs,
   isProcessing,
-  version = 'v1.1.5'
+  version = 'v1.2.0'
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 

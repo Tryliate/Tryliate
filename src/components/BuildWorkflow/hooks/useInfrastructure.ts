@@ -11,17 +11,34 @@ export function useInfrastructure(
 ) {
   const handleAuthorize = useCallback(() => {
     if (!user?.id) return;
+
     const CLIENT_ID = process.env.NEXT_PUBLIC_SUPABASE_OAUTH_CLIENT_ID || '';
     const REDIRECT_URI = window.location.origin + '/auth/callback/supabase';
-    const NEXT_PATH = window.location.pathname;
-    const STATE = `user_id=${user.id},next=${NEXT_PATH}`;
-    const authUrl = `https://api.supabase.com/v1/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&state=${encodeURIComponent(STATE)}`;
+    const NEXT_PATH = window.location.pathname + window.location.search;
 
-    const width = 500;
-    const height = 650;
-    const left = window.screenX + (window.outerWidth - width) / 2;
-    const top = window.screenY + (window.outerHeight - height) / 2;
-    window.open(authUrl, 'Tryliate Auth', `width=${width},height=${height},left=${left},top=${top},status=no,menubar=no,toolbar=no`);
+    // Multi-fragment state DNA
+    const STATE = `user_id=${user.id},next=${NEXT_PATH}`;
+
+    console.log('🔗 [INFRA] Initializing Neural Handshake...');
+    console.log('📍 [INFRA] Redirect URI:', REDIRECT_URI);
+    console.log('🧬 [INFRA] State DNA:', STATE);
+
+    const authUrl = `https://api.supabase.com/v1/oauth/authorize?` +
+      new URLSearchParams({
+        client_id: CLIENT_ID,
+        redirect_uri: REDIRECT_URI,
+        response_type: 'code',
+        scope: 'all',
+        state: STATE
+      }).toString();
+
+    const popup = window.open(authUrl, 'SupabaseAuth', 'width=600,height=800');
+
+    if (!popup) {
+      console.error('❌ [INFRA] Powerup blocked. Please allow popups for calibration.');
+      alert('Please allow popups for Supabase authorization.');
+      return;
+    }
   }, [user?.id]);
 
   const handleProvisionInfrastructure = useCallback(async () => {
