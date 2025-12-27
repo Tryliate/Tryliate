@@ -1,6 +1,6 @@
 
 import postgres from 'postgres';
-import { NativeJob, NativeQueueAdapter, WORKFLOW_SCHEMA_SQL } from '../queue.ts';
+import { NativeJob, NativeQueueAdapter, WORKFLOW_SCHEMA_SQL } from '../queue';
 
 /**
  * Postgres Implementation of the Tryliate Queue

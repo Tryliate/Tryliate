@@ -7,7 +7,8 @@ export function useInfrastructure(
   setProvisioningLogs: (v: any) => void,
   setNotification: (v: any) => void,
   setIsConfigured: (v: boolean) => void,
-  setIsSmartConnectOpen: (v: boolean) => void
+  setIsSmartConnectOpen: (v: boolean) => void,
+  setIsSupabaseConnected: (v: boolean) => void
 ) {
   const handleAuthorize = useCallback(() => {
     if (!user?.id) return;
@@ -103,6 +104,7 @@ export function useInfrastructure(
       });
       if (!res.ok) throw new Error('Reset failed');
       setIsConfigured(false);
+      setIsSupabaseConnected(false);
       setNotification({ type: 'success', message: 'Reset Complete' });
     } catch (err: any) {
       setNotification({ type: 'error', message: `Reset Failed: ${err.message}` });

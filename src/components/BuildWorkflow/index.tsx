@@ -78,7 +78,7 @@ const BuildWorkflowInner = () => {
   const [provisioningLogs, setProvisioningLogs] = useState<string[]>([]);
 
   const { handleAuthorize, handleProvisionInfrastructure, handleInfrastructureReset } = useInfrastructure(
-    user, setIsProvisioning, setProvisioningLogs, setNotification, setIsConfigured, setIsSmartConnectOpen
+    user, setIsProvisioning, setProvisioningLogs, setNotification, setIsConfigured, setIsSmartConnectOpen, setIsSupabaseConnected
   );
 
   const {

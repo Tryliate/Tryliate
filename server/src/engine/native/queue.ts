@@ -1,5 +1,5 @@
 
-import { WorkflowRunStatus } from '../types.ts';
+import { WorkflowRunStatus } from '../types';
 
 /**
  * The Queue Item Structure

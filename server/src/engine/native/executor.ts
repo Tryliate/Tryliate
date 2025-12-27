@@ -1,8 +1,6 @@
 
-import { NativeQueueAdapter, NativeJob } from './queue.ts';
-import { NativeToolBridge } from './tool-bridge.ts';
-
-
+import { NativeQueueAdapter, NativeJob } from './queue';
+import { NativeToolBridge } from './tool-bridge';
 
 interface WorkflowDefinition {
   nodes: any[];
