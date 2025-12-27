@@ -21,7 +21,10 @@ export async function GET(request: Request) {
   const host = request.headers.get('x-forwarded-host') || request.headers.get('host');
   const proto = request.headers.get('x-forwarded-proto') || 'https';
 
-  let origin = (host) ? `${proto}://${host}` : (siteUrl || requestUrl.origin);
+  // PRIORITY 1: Configured Site URL (Most reliable for Prod)
+  // PRIORITY 2: Forwarded Headers (Reliable for Previews/Vercel)
+  // PRIORITY 3: Request Origin (Fallback for Local)
+  let origin = siteUrl || ((host) ? `${proto}://${host}` : requestUrl.origin);
 
   // Ensure origin doesn't end with slash
   origin = origin.replace(/\/$/, '');
@@ -34,6 +37,24 @@ export async function GET(request: Request) {
     detectedOrigin: origin,
     requestUrl: request.url
   });
+
+  const renderError = (title: string, message: string, details?: any) => {
+    return new Response(`
+      <!DOCTYPE html>
+      <html>
+        <body style="font-family: system-ui, sans-serif; padding: 2rem; background: #0a0a0a; color: #ededed; line-height: 1.5;">
+          <div style="max-width: 600px; margin: 0 auto; border: 1px solid #333; padding: 20px; border-radius: 8px; background: #111;">
+            <h1 style="color: #ff4444; margin-top: 0;">${title}</h1>
+            <p style="font-size: 1.1rem; color: #ccc;">${message}</p>
+            ${details ? `<pre style="background: #000; padding: 10px; border-radius: 4px; overflow-x: auto; color: #888; font-size: 0.9rem;">${JSON.stringify(details, null, 2)}</pre>` : ''}
+            <div style="margin-top: 20px;">
+              <a href="/" style="color: #3b82f6; text-decoration: none;">&larr; Return Home</a>
+            </div>
+          </div>
+        </body>
+      </html>
+    `, { status: 500, headers: { 'Content-Type': 'text/html' } });
+  };
 
   if (code && state) {
     try {
@@ -49,7 +70,7 @@ export async function GET(request: Request) {
 
       if (!userId) {
         console.error('❌ Neural Handshake Error: Missing user identity in state DNA.');
-        return new Response(`Neural Handshake Error: Missing user identity in state.`, { status: 400 });
+        return renderError('Neural Handshake Error', 'Missing user identity in state data.', { state: decodedState });
       }
 
       // 2. Token Exchange (Management API)
@@ -58,10 +79,17 @@ export async function GET(request: Request) {
 
       if (!CLIENT_ID || !CLIENT_SECRET) {
         console.error('❌ Missing OAuth Credentials:', { hasClientId: !!CLIENT_ID, hasClientSecret: !!CLIENT_SECRET });
-        return new Response('Neural Sync Error: Platform environment not calibrated (Missing CLIENT_ID or CLIENT_SECRET).', { status: 500 });
+        return renderError('Configuration Error', 'Platform environment not calibrated.', {
+          error: 'Missing OAuth Credentials',
+          hint: 'Ensure SUPABASE_OAUTH_CLIENT_ID and SUPABASE_OAUTH_CLIENT_SECRET are set in Cloud Run.'
+        });
       }
 
       console.log('📡 Exchanging code for Management Token...');
+
+      const redirectUri = `${origin}/auth/callback/supabase`;
+      console.log('🔗 Using Redirect URI:', redirectUri);
+
       const tokenResponse = await fetch('https://api.supabase.com/v1/oauth/token', {
         method: 'POST',
         headers: {
@@ -71,7 +99,7 @@ export async function GET(request: Request) {
         body: new URLSearchParams({
           grant_type: 'authorization_code',
           code: code,
-          redirect_uri: `${origin}/auth/callback/supabase`,
+          redirect_uri: redirectUri,
         }),
       });
 
@@ -79,13 +107,16 @@ export async function GET(request: Request) {
 
       if (!tokenResponse.ok || tokenData.error) {
         console.error('❌ Supabase Token API Error:', tokenData);
-        return new Response(`Infrastructure Auth Failed: ${tokenData.error_description || tokenData.error || 'Token exchange failed'}`, { status: 500 });
+        return renderError('Authorization Failed', 'Could not exchange code for token.', {
+          supbase_error: tokenData,
+          used_redirect_uri: redirectUri
+        });
       }
 
       const accessToken = tokenData.access_token;
       if (!accessToken) {
         console.error('❌ No access token in Supabase response:', tokenData);
-        return new Response('Neural Sync Error: Supabase did not return a valid management token.', { status: 500 });
+        return renderError('Authorization Error', 'Supabase did not return a valid management token.');
       }
 
       console.log('✅ Access Token acquired. Fetching Project Infrastructure...');
@@ -187,7 +218,10 @@ export async function GET(request: Request) {
 
     } catch (err: any) {
       console.error('❌ Critical Callback Failure:', err);
-      return new Response(`Neural Link Aborted: ${err.message}`, { status: 500 });
+      return renderError('System Malfunction', 'Critical failure during neural link handshake.', {
+        message: err.message,
+        stack: err.stack
+      });
     }
   }
 
