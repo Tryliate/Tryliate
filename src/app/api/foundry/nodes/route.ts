@@ -1,10 +1,13 @@
-import { NextResponse } from 'next/server';
+export const dynamic = 'force-dynamic';
 import { queryNeon } from '@/lib/neon';
 
 export async function GET() {
   try {
     const nodes = await queryNeon('SELECT * FROM foundry_nodes ORDER BY created_at DESC');
-    return NextResponse.json(nodes);
+    return new Response(JSON.stringify(nodes), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
   } catch (error: any) {
     console.error('Neon Fetch Error (Nodes):', error);
 
@@ -30,6 +33,9 @@ export async function GET() {
       }
     ];
 
-    return NextResponse.json(mockNodes);
+    return new Response(JSON.stringify(mockNodes), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }

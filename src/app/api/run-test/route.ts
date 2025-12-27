@@ -1,29 +1,28 @@
-import { NextResponse } from "next/server";
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  return NextResponse.json({
+  return new Response(JSON.stringify({
     success: true,
     message: "Neural Core Standby: Pulse detected via GET.",
     mode: "Diagnostics"
+  }), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' }
   });
 }
 
 export async function POST(req: Request) {
   try {
-    console.log("🧪 [Neural Engine] Test run requested via POST");
-
-    let body;
+    let body = {};
     try {
       body = await req.json();
     } catch (e) {
-      console.warn("⚠️ [Neural Engine] Empty or invalid JSON body received");
-      body = {};
+      // Ignore parse errors for diagnostics
     }
 
-    const { canvasJson, userId } = body;
-    console.log("🧪 [Neural Engine] Target User:", userId || "Anonymous");
+    const { canvasJson, userId } = (body as any);
 
-    return NextResponse.json({
+    return new Response(JSON.stringify({
       success: true,
       message: "Neural Core Standby: Test sequence initialized.",
       note: "Standard engine currently in reconfiguration. Operating in Emulation Mode.",
@@ -31,13 +30,17 @@ export async function POST(req: Request) {
         nodeCount: canvasJson?.nodes?.length || 0,
         edgeCount: canvasJson?.edges?.length || 0
       }
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
     });
   } catch (error: any) {
-    console.error("❌ [Neural Engine] Error triggering test:", error);
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 }
-    );
+    return new Response(JSON.stringify({
+      success: false,
+      error: error.message || "Unknown error"
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }
-

@@ -23,9 +23,9 @@ async function testEngine() {
     const res = await fetch(`${BACKEND_URL}/health`);
     const health = await res.json();
     console.log(`📊 Health Status: ${health.status}`);
-    console.log(`   - Supabase: ${health.services.supabase === 'healthy' ? '🟢' : '🔴'} ${health.services.supabase}`);
-    console.log(`   - Neon (DB): ${health.services.neon === 'healthy' ? '🟢' : '🔴'} ${health.services.neon}`);
-    console.log(`   - Redis:    ${health.services.redis === 'healthy' ? '🟢' : '🔴'} ${health.services.redis}`);
+    console.log(`   - Supabase:  ${health.services.supabase === 'healthy' ? '🟢' : '🔴'} ${health.services.supabase}`);
+    console.log(`   - Neon (DB): ${health.services.master_db === 'healthy' ? '🟢' : '🔴'} ${health.services.master_db}`);
+    console.log(`   - Redis:     ${health.services.redis === 'healthy' ? '🟢' : '🔴'} ${health.services.redis}`);
 
     if (res.status === 200) {
       console.log('✅ All Infrastructure components are healthy.');
@@ -52,7 +52,6 @@ async function testEngine() {
   // 4. Frontend Integration Check
   console.log('\n📡 [Step 4] Verifying Frontend -> Engine handshake...');
   const frontendUrls = [
-    'https://frontend-374665986758.us-central1.run.app',
     'https://frontend-nh767yfnoq-uc.a.run.app'
   ];
 
@@ -65,8 +64,8 @@ async function testEngine() {
         body: JSON.stringify({ userId: 'test-diagnostic', canvasJson: { nodes: [], edges: [] } })
       });
 
-      const text = await res.text();
       console.log(`     Status: ${res.status}`);
+      const text = await res.text();
 
       try {
         const data = JSON.parse(text);
@@ -76,14 +75,63 @@ async function testEngine() {
           console.error('     ❌ Frontend Handshake failed:', data.error);
         }
       } catch (e) {
-        console.warn('     ⚠️ Could not parse JSON response:', text.substring(0, 100));
+        console.warn('     ⚠️ Non-JSON response received. First 100 chars:', text.substring(0, 100));
       }
     } catch (e) {
       console.error(`     ❌ Connection FAILED to ${url}:`, e.message);
     }
   }
 
+  // 5. Foundry Nodes Data Verification
+  console.log('\n📡 [Step 5] Verifying Foundry Nodes Retrieval...');
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/mcp/foundry-nodes`);
+    console.log(`     Status: ${res.status}`);
+    const text = await res.text();
+
+    try {
+      const data = JSON.parse(text);
+      if (Array.isArray(data)) {
+        console.log(`     ✅ Successfully retrieved ${data.length} foundry nodes.`);
+      } else {
+        console.error('     ❌ Data is not an array:', data);
+      }
+    } catch (e) {
+      console.error('     ❌ Failed to parse foundry nodes JSON:', text.substring(0, 200));
+    }
+  } catch (e) {
+    console.error('     ❌ Foundry verification FAILED:', e.message);
+  }
+
+  // 6. Frontend Foundry Nodes Verification
+  console.log('\n📡 [Step 6] Verifying Frontend Foundry Nodes retrieval...');
+  try {
+    const res = await fetch(`${FRONTEND_URL}/api/foundry/nodes`);
+    console.log(`     Status: ${res.status}`);
+    const text = await res.text();
+
+    try {
+      const data = JSON.parse(text);
+      if (Array.isArray(data)) {
+        const isMock = data.some(n => n.id?.startsWith('mock-'));
+        if (isMock) {
+          console.warn('     ⚠️ Frontend is returning MOCK data (Database fallback active).');
+        } else {
+          console.log(`     ✅ Successfully retrieved ${data.length} LIVE foundry nodes.`);
+        }
+      } else {
+        console.error('     ❌ Data is not an array:', data);
+      }
+    } catch (e) {
+      console.error('     ❌ Failed to parse frontend foundry nodes JSON:', text.substring(0, 200));
+    }
+  } catch (e) {
+    console.error('     ❌ Frontend Foundry verification FAILED:', e.message);
+  }
+
   console.log('\n🏁 Diagnostics Complete.');
 }
 
 testEngine();
+
+

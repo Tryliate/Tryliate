@@ -12,7 +12,7 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, '../../../.env.local') });
 
 export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || process.env.NEON_DB_URL || process.env.NEON_DATABASE_URL,
+  connectionString: process.env.SUPABASE_DATABASE_URL || process.env.DATABASE_URL || process.env.NEON_DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 });
 
