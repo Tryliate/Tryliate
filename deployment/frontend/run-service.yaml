@@ -28,19 +28,40 @@ spec:
               memory: 512Mi
           env:
             - name: NEXT_PUBLIC_SITE_URL
-              value: https://frontend-374665986758.us-central1.run.app
+              valueFrom:
+                secretKeyRef:
+                  name: site-url
+                  key: latest
             - name: NEXT_PUBLIC_SUPABASE_URL
-              value: https://edtfhsblomgamobizkbo.supabase.co
+              valueFrom:
+                secretKeyRef:
+                  name: supabase-url
+                  key: latest
             - name: NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-              value: sb_publishable_gLjIL2U66iJo18ce3HHHDg_twGAg078
+              valueFrom:
+                secretKeyRef:
+                  name: supabase-publishable-key
+                  key: latest
             - name: NEXT_PUBLIC_CLOUD_RUN_URL
-              value: https://tryliate-backend-374665986758.us-east1.run.app
+              valueFrom:
+                secretKeyRef:
+                  name: cloud-run-url
+                  key: latest
             - name: NEXT_PUBLIC_ENGINE_URL
-              value: https://tryliate-backend-374665986758.us-east1.run.app
+              valueFrom:
+                secretKeyRef:
+                  name: engine-url
+                  key: latest
             - name: NEXT_PUBLIC_LOGO_DEV_PUBLISHABLE_KEY
-              value: pk_KEBuu6OhQjqHQIlO1PHMMQ
+              valueFrom:
+                secretKeyRef:
+                  name: logo-dev-publishable-key
+                  key: latest
             - name: NEXT_PUBLIC_SUPABASE_OAUTH_CLIENT_ID
-              value: 4e250574-7502-48b4-bae3-d986ef752048
+              valueFrom:
+                secretKeyRef:
+                  name: supabase-oauth-client-id
+                  key: latest
             - name: SUPABASE_SECRET_KEY
               valueFrom:
                 secretKeyRef:
