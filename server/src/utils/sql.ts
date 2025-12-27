@@ -24,19 +24,7 @@ CREATE TABLE IF NOT EXISTS public.nodes (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE TABLE IF NOT EXISTS public.users (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  email TEXT UNIQUE,
-  supabase_project_id TEXT,
-  supabase_access_token TEXT,
-  supabase_db_pass TEXT,
-  supabase_org_id TEXT,
-  supabase_url TEXT,
-  tryliate_initialized BOOLEAN DEFAULT false,
-  supabase_connected BOOLEAN DEFAULT false,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
+
 
 CREATE TABLE IF NOT EXISTS public.edges (
   id TEXT PRIMARY KEY,

@@ -40,7 +40,7 @@ router.post('/provision', async (req: Request, res: Response, next: NextFunction
       /* 
       // Runtime Vault Probe removed as per strict Supabase-only policy
       try {
-        const userRecords = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+        // const userRecords = await db.select().from(users).where(eq(users.id, userId)).limit(1);
         const vaultData = userRecords[0];
         if (vaultData && vaultData.supabaseAccessToken) {
           accessToken = vaultData.supabaseAccessToken;
